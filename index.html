@@ -341,7 +341,8 @@ function draw(){const u=used(),ok=s=>s.pl.some(p=>!u.has(p.n)&&freeFor(p).length
 function openSheet(t,b){$('#shT').textContent=t;$('#shB').innerHTML=b;$('#sheet').hidden=false;document.body.classList.add('lock');const f=$('#shB button');f&&f.focus()}
 function closeSheet(){$('#sheet').hidden=true;document.body.classList.remove('lock');st&&(st.sel=null)}
 function selectPlayer(p){st.pick=st.pick===p?null:p;render();if(st.pick){const el=$('#rink');el&&el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'})}}
-function place(k){const p=st.pick;if(!p||st.L[k]||eff(p,k)==null)return;st.L[k]={p,r:eff(p,k)};st.pop=k;st.pick=null;st.k=0;if(filled()>=11)st.phase='ready';else draw();render()}
+function place(k){const p=st.pick;if(!p||st.L[k]||eff(p,k)==null)return;st.L[k]={p,r:eff(p,k)};st.pop=k;st.pick=null;st.k=0;
+ if(filled()>=11){st.phase='ready';render()}else{draw();render();const el=$('#panel');el&&el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}}
 function openMove(k){const x=st.L[k];st.sel={mv:k};const ks=SL.map((_,j)=>j).filter(j=>j!==k&&eff(x.p,j)!=null&&(!st.L[j]||eff(st.L[j].p,k)!=null));
  openSheet(x.p.n,`<p class="why">Сейчас: ${slotName(k)}. Переставить или поменять местами:</p><div class="opts">${ks.map(j=>{const y=st.L[j];return`<button class="opt" data-act="move" data-k="${j}"><span>${slotName(j)} (${SL[j].a})${y?`<small style="color:var(--mut)">поменять с: ${esc(y.p.sn)}</small>`:'<small style="color:var(--mut)">свободно</small>'}</span><b>${showR()?eff(x.p,j):''}</b></button>`}).join('')}</div>`)}
 function doMove(j){const k=st.sel&&st.sel.mv;if(k==null)return;const x=st.L[k],y=st.L[j];st.L[j]={p:x.p,r:eff(x.p,j)};st.L[k]=y?{p:y.p,r:eff(y.p,k)}:null;st.pop=j;closeSheet();if(st.phase==='ready'&&filled()<11){st.phase='draft';st.k=0;draw()}render()}
