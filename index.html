@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Две пятёрки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: arena broadcast — quick, confident, a bit of scoreboard swagger
+   IDEA: the coach's magnetic lineup board, drawn as a rink
+   PICTURE: vertical rink with two fives and a goalie that fill up card by card
+   COLOUR and TYPE: ice white, goal-line red, blue-line blue; Russo One for numbers, Rubik for text
+   LAYOUT: board left, draft/tournament panel right; on phones the active panel comes first */
+:root{color-scheme:light dark;--bg:light-dark(#e6eef5,#07101c);--pan:light-dark(#fff,#0f1b2c);--ink:light-dark(#0c1a2b,#e7eef6);--mut:light-dark(#566679,#97a8bc);--ice:light-dark(#f8fbfe,#0f2036);--board:light-dark(#bccbdb,#2a3e5a);--card:light-dark(#fff,#18304f);--dash:light-dark(#a2b5c8,#3c5677);--red:light-dark(#cf1f2e,#ff5262);--blue:light-dark(#1f4fd1,#6d97ff);--soft:light-dark(#edf2f7,#16263b);--ok:light-dark(#0f7a38,#55d486)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Rubik,system-ui,sans-serif;overflow-x:clip}
+body.lock{overflow:hidden}
+h1,h2,h3{margin:0;font-weight:400}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.top{max-width:1180px;margin:0 auto;padding:22px max(4vw,12px) 14px;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:6px 20px}
+.top h1{font:clamp(32px,6vw,46px)/1.05 'Russo One',sans-serif;letter-spacing:.01em}
+.top h1 i{font-style:normal;color:var(--red)}
+.sub{margin:4px 0 0;color:var(--mut)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 max(4vw,12px) 32px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media(min-width:900px){.wrap{grid-template-columns:minmax(0,440px) minmax(0,1fr);align-items:start}.boardcol{position:sticky;top:12px}}
+@media(max-width:899px){body.ph-draft .panel,body.ph-tour .panel{order:-1}}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.st{background:var(--pan);border-radius:12px;padding:6px 2px;text-align:center}
+.st b{display:block;font:22px/1.15 'Russo One',sans-serif}
+.st span{font-size:13px;color:var(--mut)}
+.rink{position:relative;border:4px solid var(--board);border-radius:46px;background:var(--ice);padding:16px 12px 0;overflow:hidden}
+.ln{position:relative;z-index:1}
+.lt{font-size:13px;font-weight:500;color:var(--mut);margin:0 0 6px 4px}
+.r3,.r2,.r1{display:grid;gap:8px}
+.r3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.r2{grid-template-columns:repeat(2,minmax(0,1fr));width:68%;margin:8px auto 0}
+.r1{grid-template-columns:minmax(0,1fr);width:34%;margin:0 auto}
+.redl{position:relative;height:4px;background:var(--red);margin:16px -12px}
+.redl i{position:absolute;left:50%;top:50%;width:58px;height:58px;border:2px solid color-mix(in srgb,var(--blue) 45%,transparent);border-radius:50%;transform:translate(-50%,-50%)}
+.redl i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;border-radius:50%;background:var(--blue)}
+.bluel{height:6px;background:var(--blue);opacity:.85;margin:16px -12px 12px}
+.gz{position:relative;padding:0 0 30px}
+.gz::before{content:"";position:absolute;left:50%;bottom:12px;width:132px;height:46px;transform:translateX(-50%);border-radius:66px 66px 0 0;background:color-mix(in srgb,var(--blue) 20%,transparent)}
+.gz::after{content:"";position:absolute;left:-12px;right:-12px;bottom:11px;height:2px;background:var(--red)}
+.slot{position:relative;z-index:1;width:100%;min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;border-radius:14px;border:2px solid transparent;background:var(--card);box-shadow:0 2px 0 var(--board);cursor:pointer;text-align:center}
+.slot.empty{background:color-mix(in srgb,var(--ice) 60%,transparent);border:2px dashed var(--dash);box-shadow:none;cursor:default}
+.lab{font:16px 'Russo One',sans-serif;color:var(--mut)}
+.slot .rt{font:23px/1 'Russo One',sans-serif}
+.sn{font-size:13px;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mt{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--mut);white-space:nowrap}
+.t90{border-color:var(--red)}.t90 .rt{color:var(--red)}
+.t85 .rt{color:var(--blue)}
+.off .mt{color:#c46a00}
+.pop{animation:pop .45s ease-out}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.06)}100%{transform:none;opacity:1}}
+@media(max-width:520px){.slot{min-height:66px}.slot .rt{font-size:20px}.rink{border-radius:34px;padding:12px 8px 0}.redl,.bluel{margin-inline:-8px}.gz::after{left:-8px;right:-8px}}
+.fl{width:22px;height:15px;flex:none;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.14);vertical-align:-2px}
+.panel{background:var(--pan);border-radius:20px;padding:clamp(16px,3vw,24px)}
+.ph{font:28px/1.1 'Russo One',sans-serif;margin-bottom:8px}
+.lead{margin:0 0 16px;max-width:62ch}
+.why{font-size:14px;color:var(--mut);margin:6px 0 0}
+.btn{min-height:46px;padding:10px 18px;border:0;border-radius:12px;background:var(--red);color:#fff;font-weight:500;cursor:pointer}
+.btn.sec{background:var(--soft);color:var(--ink)}
+.btn.big{width:100%;font-size:18px;min-height:54px;margin-top:14px}
+.btn:disabled{opacity:.4;cursor:default}
+.modes{display:grid;gap:8px}
+.mode{display:grid;gap:2px;width:100%;text-align:left;padding:12px 14px;border:2px solid var(--soft);border-radius:14px;background:var(--pan);cursor:pointer}
+.mode b{font-weight:500;font-size:17px}.mode span{font-size:14px;color:var(--mut)}
+.mode[aria-pressed=true]{border-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--pan))}
+.codebox{margin-top:18px}
+.codebox label{font-size:14px;color:var(--mut)}
+.row{display:flex;gap:8px;margin-top:4px}
+.row input{flex:1;min-height:46px;padding:8px 12px;border:2px solid var(--soft);border-radius:12px;background:var(--pan);color:var(--ink);font:16px Rubik,sans-serif;text-transform:uppercase}
+.rules{margin:18px 0 0;padding-left:20px;color:var(--mut);font-size:15px}
+.rules li{margin:4px 0}
+.drhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--mut);font-size:15px;margin-bottom:10px}
+.drhead b{color:var(--ink);font:18px 'Russo One',sans-serif}
+.draw{display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;padding:14px;border-radius:16px;background:var(--soft)}
+.draw .fl{width:66px;height:44px;border-radius:6px}
+.draw>div{flex:1 1 150px}
+.draw .btn{background:var(--pan)}
+@media(max-width:520px){.draw .btn{flex:1 1 100%}}
+.draw h2{font:30px/1.05 'Russo One',sans-serif}
+.draw p{margin:4px 0 0;color:var(--mut)}
+.tag{display:inline-block;font-size:13px;font-weight:500;padding:1px 8px;border-radius:99px;background:var(--pan);color:var(--ink);vertical-align:1px}
+.m1{background:#e9c34f;color:#3a2a00}.m2{background:#cdd4dc;color:#1c232b}.m3{background:#d6935f;color:#2b1300}
+.sec h3{font-size:14px;font-weight:500;color:var(--mut);margin:16px 0 4px}
+.pl{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;min-height:48px;padding:5px 8px;border:0;border-radius:12px;background:transparent;text-align:left;cursor:pointer}
+.pl:hover:not(:disabled){background:var(--soft)}
+.pl:disabled{opacity:.38;cursor:default}
+.chip{font:18px/1 'Russo One',sans-serif;text-align:center;padding:7px 0;border-radius:9px;background:var(--soft)}
+.pl.t90 .chip{background:var(--red);color:#fff}.pl.t85 .chip{background:var(--blue);color:#fff}.pl.t80 .chip{background:var(--ink);color:var(--pan)}
+.pl.t90{border-color:transparent}
+.nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ps{font-size:13px;color:var(--mut)}
+.styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media(max-width:520px){.styles{grid-template-columns:minmax(0,1fr)}}
+.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(4,10,20,.5)}
+.sheet[hidden]{display:none}
+.sh{width:min(560px,100%);max-height:82vh;overflow:auto;background:var(--pan);border-radius:20px 20px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom))}
+.sh h3{font:22px/1.15 'Russo One',sans-serif;margin-bottom:4px}
+.opts{display:grid;gap:6px;margin:12px 0}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:50px;padding:8px 14px;border:0;border-radius:12px;background:var(--soft);text-align:left;cursor:pointer}
+.opt small{display:block;font-size:13px;color:#c46a00}
+.opt b{font:20px 'Russo One',sans-serif}
+.sh textarea{width:100%;min-height:150px;font:15px Rubik,sans-serif;padding:10px;border-radius:12px;border:2px solid var(--soft);background:var(--pan);color:var(--ink)}
+.res{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:12px}
+.disc{flex:none;width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font:34px 'Russo One',sans-serif;box-shadow:inset 0 -6px 0 rgba(0,0,0,.18),0 6px 16px rgba(0,0,0,.18)}
+.disc.m1{background:radial-gradient(circle at 35% 30%,#fff3c4,#d9a91c 58%,#8d6500)}
+.disc.m2{background:radial-gradient(circle at 35% 30%,#fff,#b7c0ca 58%,#6c7784)}
+.disc.m3{background:radial-gradient(circle at 35% 30%,#ffe0c6,#c47a3f 58%,#7a4114)}
+.disc.m4{background:var(--soft);color:var(--mut);box-shadow:none}
+.res h2{font:clamp(28px,5vw,40px)/1.05 'Russo One',sans-serif}
+.res p{margin:4px 0 0;color:var(--mut)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.game{border-radius:14px;background:var(--soft);margin:8px 0}
+.game summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;list-style:none}
+.game summary::-webkit-details-marker{display:none}
+.gl{display:grid;font-size:13px;color:var(--mut)}
+.gl b{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:500;color:var(--ink);overflow:hidden;white-space:nowrap}
+.score{font:24px 'Russo One',sans-serif;white-space:nowrap}
+.score small{font:13px Rubik,sans-serif;color:var(--mut)}
+.W .score{color:var(--ok)}.L .score{color:var(--red)}
+.evs{list-style:none;margin:0;padding:0 14px 12px;font-size:15px}
+.evs li{display:grid;grid-template-columns:52px minmax(0,1fr);gap:6px;padding:3px 0;border-top:1px solid var(--pan)}
+.evs li span:first-child{font-variant-numeric:tabular-nums;color:var(--mut)}
+.evs .op{color:var(--mut)}
+h3.tt{font:20px 'Russo One',sans-serif;margin:22px 0 6px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{font-weight:500;color:var(--mut);font-size:13px}
+td,th{padding:6px 5px;border-bottom:1px solid var(--soft);text-align:right;white-space:nowrap}
+td:nth-child(2),th:nth-child(2){text-align:left;white-space:normal}
+tr.me td{background:color-mix(in srgb,var(--red) 11%,transparent);font-weight:500}
+tr.cut td{border-bottom:2px solid var(--red)}
+.ko{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--soft);font-size:15px}
+.ko span{display:flex;align-items:center;gap:6px}.ko span:last-child{justify-content:flex-end;text-align:right}
+.ko b{font:17px 'Russo One',sans-serif;white-space:nowrap}
+.ko .win{font-weight:500}
+.ks{font-size:14px;color:var(--mut);margin:14px 0 2px}
+.sc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:15px;margin-top:6px}
+.sc span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.badge{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:var(--red);color:#fff;font-size:14px;font-weight:500}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--pan);padding:10px 18px;border-radius:12px;font-size:15px}
+.toast[hidden]{display:none}
+.foot{max-width:1180px;margin:0 auto;padding:0 max(4vw,12px) 28px;font-size:13px;color:var(--mut)}
+.foot a{color:inherit}
+@media(prefers-reduced-motion:reduce){.pop{animation:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div><h1>Две <i>пятёрки</i></h1><p class="sub">Хоккейный драфт по чемпионатам мира IIHF</p></div>
+  <p class="sub" id="dbline"></p>
+</header>
+<main class="wrap">
+  <section class="boardcol" aria-label="Ваш состав"><div id="stats" class="stats"></div><div id="rink" class="rink"></div></section>
+  <section id="panel" class="panel" aria-live="polite"></section>
+</main>
+<p class="foot">Составы — по ростерам ЧМ IIHF (Википедия, QuantHockey), в каждом — заметные игроки турнира. Рейтинги — субъективная оценка уровня игрока на том чемпионате.</p>
+<div id="sheet" class="sheet" hidden><div class="sh" role="dialog" aria-modal="true" aria-labelledby="shT"><h3 id="shT"></h3><div id="shB"></div><button class="btn sec" style="width:100%" data-act="close">Отмена</button></div></div>
+<div id="toast" class="toast" hidden></div>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TEAMS={URS:'СССР',TCH:'Чехословакия',CAN:'Канада',SWE:'Швеция',FIN:'Финляндия',CZE:'Чехия',SVK:'Словакия',RUS:'Россия',USA:'США',SUI:'Швейцария',GER:'Германия',LAT:'Латвия',KAZ:'Казахстан'};
+const MED=['','Золото','Серебро','Бронза','4-е место'];
+const RAW=[
+["URS",1979,1,"Vladislav Tretiak 96;Vladimir Myshkin 84","Vyacheslav Fetisov 90;Valeri Vasiliev 89;Zinetula Bilyaletdinov 85;Gennady Tsygankov 84;Vladimir Lutchenko 84;Vasili Pervukhin 83;Sergei Babinov 82","Valeri Kharlamov 95;Boris Mikhailov 93;Vladimir Petrov 93;Sergei Makarov 89;Helmut Balderis 88;Alexander Yakushev 87;Sergei Kapustin 86;Alexander Golikov 85;Vladimir Golikov 84;Viktor Zhluktov 84;Alexander Skvortsov 83"],
+["TCH",1979,2,"Jiří Králík 85;Marcel Sakáč 80","Jiří Bubla 86;Miroslav Dvořák 83;Milan Chalupa 82;František Kaberle st. 80;Vítězslav Ďuriš 80;Milan Kužela 79","Ivan Hlinka 89;Peter Šťastný 89;Vladimír Martinec 88;Milan Nový 86;Bohuslav Ebermann 85;Anton Šťastný 85;Marián Šťastný 84;Jaroslav Pouzar 83;Jiří Novák 83;Libor Havlíček 80"],
+["URS",1981,1,"Vladislav Tretiak 96;Vladimir Myshkin 85","Vyacheslav Fetisov 92;Alexei Kasatonov 88;Valeri Vasiliev 87;Zinetula Bilyaletdinov 85;Vasili Pervukhin 83;Sergei Babinov 81","Sergei Makarov 92;Vladimir Krutov 89;Alexander Maltsev 89;Vladimir Petrov 89;Nikolai Drozdetsky 85;Sergei Shepelev 85;Sergei Kapustin 85;Vladimir Golikov 84;Viktor Shalimov 84;Andrei Khomutov 84;Viktor Zhluktov 83;Alexander Skvortsov 83"],
+["CAN",1982,3,"Gilles Meloche 80;Greg Millen 80","Craig Hartsburg 84;Paul Reinhart 83;Kevin Lowe 82;Rick Green 81;John Van Boxmeer 80;Brad Maxwell 79","Wayne Gretzky 99;Mike Gartner 87;Dale Hawerchuk 87;Bill Barber 86;Darryl Sittler 86;Bobby Clarke 85;Bob Gainey 84;Dino Ciccarelli 84;Brian Propp 84;Bobby Smith 84;Rick Vaive 83;Mark Napier 82"],
+["CAN",1985,2,"Pat Riggin 80;Steve Weeks 78","Larry Murphy 86;Scott Stevens 86;Jamie Macoun 80;Doug Lidster 78;Steve Konroyd 78;Doug Halward 77","Mario Lemieux 95;Steve Yzerman 89;Ron Francis 87;Dave Taylor 85;Rick Vaive 84;Bernie Nicholls 84;Kirk Muller 83;Tony Tanti 82;John Anderson 81;Kevin Dineen 81;Stan Smyl 80"],
+["URS",1989,1,"Arturs Irbe 85;Sergei Mylnikov 84","Vyacheslav Fetisov 93;Alexei Kasatonov 88;Vladimir Konstantinov 85;Alexei Gusarov 84;Ilya Byakin 83;Valeri Shiryaev 82","Sergei Makarov 93;Igor Larionov 91;Vladimir Krutov 89;Vyacheslav Bykov 88;Sergei Fedorov 87;Alexander Mogilny 87;Valeri Kamensky 87;Andrei Khomutov 87;Dmitri Kvartalnov 82;Sergei Nemchinov 81;Yuri Khmylev 81"],
+["CAN",1989,2,"Grant Fuhr 88;Sean Burke 82","Scott Stevens 87;Dave Ellett 82;James Patrick 82;Randy Carlyle 81;Dave Babych 80;Ken Daneyko 78","Steve Yzerman 92;Mark Messier 91;Dale Hawerchuk 88;Glenn Anderson 86;Brian Bellows 85;Kirk Muller 84;John MacLean 83;Kevin Dineen 82;Ray Ferraro 81;Pat Verbeek 81;Gerard Gallant 80"],
+["SWE",1989,4,"Peter Lindmark 83;Rolf Ridderwall 80","Börje Salming 86;Anders Eldebrink 83;Fredrik Olausson 82;Tommy Albelin 80;Thomas Eriksson 80;Tommy Samuelsson 79","Kent Nilsson 87;Tomas Sandström 85;Thomas Steen 83;Ulf Dahlén 82;Thomas Rundqvist 82;Håkan Södergren 80;Bo Berglund 80;Jonas Bergqvist 80;Anders Carlsson 79;Peter Eriksson 78"],
+["FIN",1995,1,"Jarmo Myllys 86;Ari Sulander 80","Timo Jutila 84;Janne Niinimaa 83;Mika Strömberg 80;Marko Kiprusoff 80;Hannu Virta 80;Petteri Nummelin 79","Saku Koivu 89;Jere Lehtinen 86;Ville Peltonen 85;Sami Kapanen 83;Raimo Helminen 82;Esa Keskinen 82;Mika Nieminen 81;Janne Ojanen 81;Raimo Summanen 80;Juha Ylönen 79"],
+["SWE",1995,2,"Thomas Östlund 83;Roger Nordström 78","Tommy Sjödin 82;Christer Olsson 80;Tomas Jonsson 80;Leif Rohlin 79;Marcus Ragnarsson 79;Fredrik Stillman 78","Daniel Alfredsson 85;Mikael Johansson 82;Andreas Johansson 81;Andreas Dackell 80;Pelle Eklund 80;Jonas Bergqvist 79;Tomas Forslund 79;Stefan Örnskog 78;Erik Huusko 77;Roger Hansson 77"],
+["CZE",1996,1,"Roman Turek 86","František Kaberle 82;Michal Sýkora 81;Drahomír Kadlec 80;Antonín Stavjaňa 80;Jiří Vykoukal 79;Stanislav Neckář 79","Robert Reichel 86;Robert Lang 84;Pavel Patera 84;Martin Procházka 83;Otakar Vejvoda 82;Jiří Kučera 82;David Výborný 82;Jiří Dopita 82;Radek Bonk 81;Viktor Ujčík 80"],
+["SVK",2002,1,"Ján Lašák 84;Rastislav Staňa 80","Ľubomír Višňovský 85;Richard Lintner 82;Martin Štrbák 81;Ladislav Čierny 79;Jerguš Bača 79;Dušan Milo 78","Žigmund Pálffy 90;Peter Bondra 89;Miroslav Šatan 89;Jozef Stümpel 84;Ladislav Nagy 84;Michal Handzuš 83;Vladimír Országh 81;Miroslav Hlinka 81;Ľuboš Bartečko 80;Róbert Petrovický 80;Peter Pucher 80"],
+["RUS",2002,2,"Maxim Sokolov 85;Yegor Podomatsky 81","Dmitri Kalinin 82;Anton Volchenkov 81;Dmitri Bykov 81;Alexander Guskov 81;Sergei Gusev 79;Dmitri Ryabykin 78","Maxim Afinogenov 85;Maxim Sushinski 84;Andrei Kovalenko 83;Andrei Razin 82;Vladimir Antipov 82;Alexei Koznev 80;Alexander Prokopiev 80;Valeri Karpov 80;Ravil Gusmanov 80;Alexander Savchenkov 80"],
+["SWE",2002,3,"Tommy Salo 87;Stefan Liv 80","Kim Johnsson 84;Thomas Rhodin 80;Daniel Tjärnqvist 80;Ronnie Sundin 80;Magnus Johansson 79;Per Gustafsson 79","Markus Näslund 92;Henrik Zetterberg 84;Michael Nylander 84;Kristian Huselius 82;Jörgen Jönsson 81;Ulf Dahlén 80;P.J. Axelsson 80;Niklas Andersson 80;Mathias Johansson 79;Johan Davidsson 79"],
+["SWE",2006,1,"Johan Holmqvist 84;Stefan Liv 81","Niklas Kronwall 86;Kenny Jönsson 83;Ronnie Sundin 80;Magnus Johansson 80;Mattias Timander 79;Andreas Holmqvist 78","Henrik Zetterberg 91;Mikael Samuelsson 84;Johan Franzén 84;Michael Nylander 84;Nicklas Bäckström 83;Jörgen Jönsson 81;Mika Hannula 80;Tony Mårtensson 80;Andreas Karlsson 79;Jonas Nordquist 78"],
+["CZE",2006,2,"Milan Hnilička 82;Tomáš Pöpperle 80","Tomáš Kaberle 86;Zbyněk Michálek 84;Martin Škoula 81;Jan Hejda 80;Lukáš Krajíček 79;Miroslav Blaťák 79","David Výborný 85;Martin Erat 84;Tomáš Plekanec 84;Patrik Štefan 81;Jaroslav Hlinka 81;Petr Tenkrát 80;Jaroslav Balaštík 80;Jaroslav Bednář 80;Zbyněk Irgl 79;Petr Hubáček 78"],
+["FIN",2006,3,"Antero Niittymäki 84;Fredrik Norrena 82","Petteri Nummelin 82;Aki Berg 80;Lasse Kukkonen 79;Mikko Luoma 78;Tuukka Mäntylä 78;Pekka Saravo 77","Olli Jokinen 86;Mikko Koivu 84;Ville Peltonen 83;Tuomo Ruutu 82;Jussi Jokinen 82;Antti Miettinen 80;Sean Bergenheim 79;Jarkko Ruutu 79;Tomi Kallio 79;Jani Rita 78"],
+["CAN",2006,4,"Marc Denis 81;Alex Auld 80","Brent Seabrook 82;Dan Hamhuis 81;Brad Stuart 81;Stéphane Robidas 79;Nick Schultz 79;Trevor Daley 78","Sidney Crosby 92;Brendan Shanahan 85;Patrice Bergeron 85;Jeff Carter 82;Mike Richards 82;Mike Cammalleri 82;Mike Comrie 81;Scott Hartnell 80;Brad Boyes 80;Jason Williams 79"],
+["RUS",2008,1,"Evgeni Nabokov 88;Alexander Eremenko 80","Andrei Markov 87;Fedor Tyutin 82;Ilya Nikulin 82;Danny Markov 81;Dmitri Kalinin 81;Denis Grebeshkov 80","Alexander Ovechkin 96;Ilya Kovalchuk 92;Sergei Fedorov 88;Alexander Semin 88;Alexander Radulov 87;Alexei Morozov 85;Sergei Mozyakin 85;Danis Zaripov 84;Maxim Afinogenov 83;Alexei Tereshchenko 82"],
+["CAN",2008,2,"Cam Ward 84;Pascal Leclaire 82","Mike Green 85;Duncan Keith 85;Jay Bouwmeester 84;Brent Burns 82;Dan Hamhuis 81;Ed Jovanovski 81","Dany Heatley 90;Martin St. Louis 89;Rick Nash 88;Ryan Getzlaf 88;Jonathan Toews 86;Jason Spezza 86;Eric Staal 86;Shane Doan 84;Patrick Sharp 83;Chris Kunitz 82"],
+["FIN",2008,3,"Niklas Bäckström 86;Karri Rämö 80","Ossi Väänänen 80;Sami Lepistö 79;Ville Koistinen 79;Anssi Salmela 79;Janne Niskala 79;Antti-Jussi Niemi 79","Teemu Selänne 89;Saku Koivu 87;Olli Jokinen 86;Mikko Koivu 85;Tuomo Ruutu 82;Jussi Jokinen 82;Ville Peltonen 82;Niko Kapanen 81;Sean Bergenheim 80;Esa Pirnes 78"],
+["SWE",2008,4,"Henrik Lundqvist 90;Stefan Liv 81","Alexander Edler 82;Douglas Murray 80;Kenny Jönsson 80;Anton Strålman 79;Niclas Wallin 79;Magnus Johansson 79","Nicklas Bäckström 87;Tony Mårtensson 81;Mattias Weinhandl 81;Patric Hörnqvist 80;Robert Nilsson 79;Per Ledin 78;Fredrik Warg 78;Marcus Nilson 78;Rickard Wallin 78;Michael Holmqvist 78"],
+["RUS",2012,1,"Semyon Varlamov 85;Konstantin Barulin 84","Ilya Nikulin 83;Alexei Emelin 82;Yevgeny Medvedev 82;Nikita Nikitin 81;Dmitri Kalinin 80;Evgeny Biryukov 79","Evgeni Malkin 96;Pavel Datsyuk 93;Alexander Ovechkin 92;Alexander Semin 87;Evgeny Kuznetsov 85;Nikolai Kulemin 82;Alexander Popov 82;Alexei Tereshchenko 82;Sergei Shirokov 82;Alexander Perezhogin 81"],
+["SVK",2012,2,"Ján Laco 83;Peter Hamerlík 78","Zdeno Chára 91;Andrej Sekera 81;Ivan Baranka 79;Dominik Graňák 78;René Vydarený 78;Tomáš Starosta 76","Miroslav Šatan 82;Tomáš Tatar 81;Michal Handzuš 81;Tomáš Kopecký 81;Marcel Hossa 79;Libor Hudáček 79;Michel Miklík 78;Branko Radivojevič 78;Tomáš Surový 78;Juraj Mikúš 77"],
+["CZE",2012,3,"Jakub Kovář 82;Petr Mrázek 79","Ondřej Němec 80;Petr Čáslava 79;Zdeněk Kutlák 79;Miroslav Blaťák 79;Lukáš Krajíček 78;Tomáš Mojžíš 77","David Krejčí 87;Aleš Hemský 85;Tomáš Plekanec 85;Milan Michálek 84;Petr Nedvěd 83;Martin Erat 83;Michael Frolík 82;Jiří Novotný 80;Petr Koukal 79;Lukáš Kašpar 79"],
+["RUS",2014,1,"Sergei Bobrovsky 89;Andrei Vasilevskiy 80","Dmitry Orlov 82;Anton Belov 81;Yevgeny Medvedev 81;Maxim Chudinov 79;Denis Denisov 79;Andrei Zubarev 78","Alexander Ovechkin 93;Evgeni Malkin 93;Evgeny Kuznetsov 85;Vadim Shipachyov 84;Viktor Tikhonov 83;Danis Zaripov 83;Sergei Shirokov 83;Sergei Plotnikov 82;Nikolai Kulemin 82;Artem Anisimov 82"],
+["FIN",2014,2,"Pekka Rinne 89;Mikko Koskinen 80","Juuso Hietanen 79;Jere Karalahti 78;Atte Ohtamaa 77;Tuukka Mäntylä 77;Ville Lajunen 77;Tommi Kivistö 76","Petri Kontiola 82;Olli Jokinen 81;Leo Komarov 81;Jarkko Immonen 81;Erik Haula 80;Iiro Pakarinen 78;Jere Sallinen 77;Veli-Matti Savinainen 77;Miikka Salomäki 76;Petteri Wirtanen 76"],
+["SWE",2014,3,"Anders Nilsson 81;Joacim Eriksson 79","Mattias Ekholm 81;Erik Gustafsson 78;Johan Fransson 78;Tim Erixon 77;Jonas Ahnelöv 76;Niclas Burström 76","Gustav Nyquist 84;Mikael Backlund 82;Calle Järnkrok 79;Joel Lundqvist 79;Dick Axelsson 78;Linus Klasen 78;Oscar Möller 77;Jimmie Ericsson 77;Dennis Rasmussen 77;Simon Hjalmarsson 77"],
+["CAN",2015,1,"Mike Smith 84;Martin Jones 81","Brent Burns 87;Aaron Ekblad 84;Tyson Barrie 83;Dan Hamhuis 82;Jake Muzzin 82;David Savard 78","Sidney Crosby 96;Claude Giroux 88;Tyler Seguin 88;Taylor Hall 87;Jason Spezza 86;Nathan MacKinnon 85;Matt Duchene 85;Jordan Eberle 84;Ryan O'Reilly 84;Sean Couturier 82;Tyler Ennis 80"],
+["RUS",2015,2,"Sergei Bobrovsky 89;Konstantin Barulin 81","Dmitri Kulikov 81;Yevgeny Medvedev 81;Anton Belov 80;Viktor Antipin 79;Maxim Chudinov 79;Andrei Mironov 78","Alexander Ovechkin 93;Evgeni Malkin 93;Vladimir Tarasenko 89;Ilya Kovalchuk 87;Artemi Panarin 86;Sergei Mozyakin 84;Vadim Shipachyov 84;Danis Zaripov 82;Sergei Shirokov 81;Evgenii Dadonov 81;Artem Anisimov 81"],
+["USA",2015,3,"Connor Hellebuyck 83;Jack Campbell 77","Seth Jones 82;Justin Faulk 82;Torey Krug 80;Jake Gardiner 80;John Moore 77;Connor Murphy 77","Jack Eichel 84;Dylan Larkin 81;Anders Lee 80;Brock Nelson 79;Nick Bonino 79;Charlie Coyle 79;Jimmy Vesey 77;Trevor Lewis 77;Matt Hendricks 76;Mark Arcobello 76"],
+["CZE",2015,4,"Ondřej Pavelec 82;Alexander Salák 80","Jan Hejda 80;Ondřej Němec 78;Michal Jordán 77;Petr Čáslava 77;Jakub Nakládal 76;Jakub Krejčík 76","Jaromír Jágr 88;Jakub Voráček 87;Tomáš Plekanec 84;Tomáš Hertl 82;Roman Červenka 82;Vladimír Sobotka 82;Jan Kovář 80;Martin Erat 80;Jiří Novotný 78;Petr Koukal 78"],
+["CAN",2016,1,"Cam Talbot 83;Calvin Pickard 78","Morgan Rielly 82;Ryan Ellis 81;Chris Tanev 80;Matt Dumba 79;Cody Ceci 77;Mike Matheson 77","Connor McDavid 94;Taylor Hall 87;Brad Marchand 87;Mark Scheifele 85;Mark Stone 85;Corey Perry 85;Ryan O'Reilly 84;Matt Duchene 84;Derick Brassard 81;Brendan Gallagher 81;Sam Reinhart 79"],
+["FIN",2016,2,"Mikko Koskinen 81;Juuse Saros 80","Esa Lindell 78;Atte Ohtamaa 77;Juuso Hietanen 77;Ville Pokka 76;Anssi Salmela 76;Lasse Kukkonen 76","Aleksander Barkov 89;Patrik Laine 88;Mikael Granlund 85;Mikko Koivu 84;Sebastian Aho 82;Mikko Rantanen 82;Leo Komarov 81;Jussi Jokinen 80;Teemu Pulkkinen 77;Jani Lajunen 76"],
+["RUS",2016,3,"Sergei Bobrovsky 89;Ilya Sorokin 78","Slava Voynov 82;Dmitry Orlov 81;Nikita Zaitsev 80;Alexei Emelin 79;Anton Belov 78;Maxim Chudinov 77","Alexander Ovechkin 92;Pavel Datsyuk 89;Artemi Panarin 88;Evgeny Kuznetsov 87;Vadim Shipachyov 84;Sergei Mozyakin 84;Evgenii Dadonov 81;Ivan Telegin 80;Sergei Plotnikov 79;Alexander Burmistrov 78"],
+["USA",2016,4,"Keith Kinkaid 77;Thatcher Demko 75","Noah Hanifin 78;Brady Skjei 77;Jake McCabe 76;Connor Murphy 76;David Warsofsky 74;Chris Wideman 74","Auston Matthews 88;Dylan Larkin 82;Kyle Connor 79;Brock Nelson 79;Nick Foligno 79;Patrick Maroon 77;J.T. Compher 76;Frank Vatrano 76;Matt Hendricks 74;Vinnie Hinostroza 74"],
+["SWE",2018,1,"Anders Nilsson 80;Magnus Hellberg 76","Oliver Ekman-Larsson 86;John Klingberg 85;Hampus Lindholm 83;Mattias Ekholm 82;Adam Larsson 81;Erik Gustafsson 78","Filip Forsberg 87;Mika Zibanejad 86;Elias Pettersson 84;Rickard Rakell 84;Viktor Arvidsson 83;Gustav Nyquist 82;Patric Hörnqvist 82;Mikael Backlund 82;Adrian Kempe 79;Magnus Pääjärvi 77"],
+["SUI",2018,2,"Leonardo Genoni 84;Reto Berra 79","Roman Josi 89;Raphael Diaz 77;Mirco Müller 76;Ramon Untersander 76;Dean Kukan 76;Joël Genazzi 75","Nino Niederreiter 83;Timo Meier 81;Kevin Fiala 80;Sven Andrighetto 78;Grégory Hofmann 78;Enzo Corvi 77;Gaëtan Haas 76;Tristan Scherwey 76;Simon Moser 76;Reto Schäppi 75"],
+["USA",2018,3,"Keith Kinkaid 77;Scott Darling 76","Charlie McAvoy 82;Alec Martinez 80;Quinn Hughes 78;Will Butcher 77;Connor Murphy 76;Neal Pionk 76","Patrick Kane 93;Johnny Gaudreau 89;Dylan Larkin 84;Cam Atkinson 82;Chris Kreider 82;Alex DeBrincat 82;Anders Lee 81;Nick Bonino 78;Blake Coleman 77;Tage Thompson 75"],
+["CAN",2018,4,"Darcy Kuemper 79;Curtis McElhinney 77","Aaron Ekblad 82;Colton Parayko 81;Marc-Édouard Vlasic 81;Thomas Chabot 80;Darnell Nurse 79;Ryan Pulock 78","Connor McDavid 96;Mathew Barzal 85;Ryan O'Reilly 84;Ryan Nugent-Hopkins 83;Brayden Schenn 82;Bo Horvat 81;Jordan Eberle 81;Jaden Schwartz 81;Pierre-Luc Dubois 80;Kyle Turris 80"],
+["FIN",2019,1,"Kevin Lankinen 81;Veini Vehviläinen 77","Mikko Lehtonen 79;Henri Jokiharju 77;Jani Hakanpää 76;Atte Ohtamaa 76;Petteri Lindbohm 75;Niko Mikkola 75","Kaapo Kakko 82;Marko Anttila 79;Sakari Manninen 78;Juhani Tyrväinen 77;Harri Pesonen 77;Toni Rajala 77;Jere Sallinen 76;Kristian Kuusela 76;Veli-Matti Savinainen 76;Joel Kiviranta 75"],
+["CAN",2019,2,"Matt Murray 82;Carter Hart 79","Shea Theodore 81;Thomas Chabot 81;Darnell Nurse 79;Damon Severson 78;Brandon Montour 78;Troy Stecher 76","Mark Stone 86;Sean Couturier 84;Pierre-Luc Dubois 82;Jonathan Marchessault 82;Anthony Mantha 81;Sam Reinhart 81;Adam Henrique 80;Tyler Bertuzzi 80;Kyle Turris 79;Anthony Cirelli 79"],
+["RUS",2019,3,"Andrei Vasilevskiy 91;Ilya Sorokin 82","Mikhail Sergachev 82;Dmitry Orlov 81;Nikita Zaitsev 80;Nikita Zadorov 79;Vladislav Gavrikov 78;Artyom Zub 77","Nikita Kucherov 95;Alexander Ovechkin 91;Evgeni Malkin 89;Evgeny Kuznetsov 87;Kirill Kaprizov 85;Nikita Gusev 85;Evgenii Dadonov 82;Ilya Kovalchuk 81;Artem Anisimov 80;Mikhail Grigorenko 79"],
+["CAN",2021,1,"Darcy Kuemper 82;Adin Hill 77","Owen Power 79;Troy Stecher 76;Sean Walker 76;Mario Ferraro 75;Colin Miller 75;Braden Schneider 74","Andrew Mangiapane 82;Adam Henrique 79;Connor Brown 79;Gabriel Vilardi 77;Brandon Hagel 77;Cole Perfetti 76;Michael Bunting 76;Nick Paul 76;Max Comtois 76;Justin Danforth 74"],
+["FIN",2021,2,"Jussi Olkinuora 80;Harri Säteri 78","Olli Määttä 78;Mikael Seppälä 75;Atte Ohtamaa 75;Ville Pokka 75;Miika Koivisto 75;Petteri Lindbohm 74","Anton Lundell 79;Petri Kontiola 77;Marko Anttila 77;Iiro Pakarinen 76;Jere Innala 76;Hannes Björninen 75;Teemu Turunen 75;Saku Mäenalanen 75;Arttu Ruotsalainen 75;Niko Ojamäki 74"],
+["USA",2021,3,"Jake Oettinger 79;Cal Petersen 77","Matt Roy 76;Christian Wolanin 75;Adam Clendening 74;Zac Jones 74;Ryan Shea 73;Connor Mackey 73","Jason Robertson 84;Conor Garland 80;Tage Thompson 78;Kevin Labanc 77;Matty Beniers 77;Trevor Moore 77;Colin Blackwell 76;Ryan Donato 75;Brian Boyle 75;Eric Robinson 74"],
+["KAZ",2021,0,"Andrei Shutov 75;Demid Yeremeyev 73","Darren Dietz 75;Jesse Blacker 73;Valeri Orekhov 72;Viktor Svedberg 72;Samat Daniyar 70;Kirill Polokhov 70","Nikita Mikhailis 78;Curtis Valk 75;Roman Starchenko 75;Kirill Savitski 73;Arkadiy Shestakov 72;Pavel Akolzin 72;Kirill Panyukov 72;Dmitri Shevchenko 72;Evgeni Rymarev 71;Yegor Petukhov 70"],
+["CAN",2023,1,"Samuel Montembeault 80;Devon Levi 76","MacKenzie Weegar 82;Tyler Myers 78;Ethan Bear 77;Justin Barron 75;Pierre-Olivier Joseph 75;Brad Hunt 75","Tyler Toffoli 82;Adam Fantilli 79;Scott Laughton 78;Lawson Crouse 78;Samuel Blais 77;Jack Quinn 77;Cody Glass 77;Peyton Krebs 75;Michael Carcone 75;Joe Veleno 75"],
+["GER",2023,2,"Mathias Niederberger 80;Dustin Strahlmeier 76","Moritz Seider 85;Kai Wissmann 75;Moritz Müller 75;Leon Gawanke 74;Jonas Müller 74;Fabio Wagner 74","JJ Peterka 81;Dominik Kahun 78;Nico Sturm 77;Marcel Noebels 77;Frederik Tiffels 76;Daniel Fischbuch 75;Maximilian Kastner 74;Justin Schütz 74;Alexander Ehl 74;Manuel Wiederer 73"],
+["LAT",2023,3,"Artūrs Šilovs 80;Kristers Gudļevskis 76","Kristiāns Rubīns 75;Ralfs Freibergs 75;Jānis Jaks 73;Uvis Balinskis 73;Kristaps Zīle 72;Arvils Bergmanis 71","Rūdolfs Balcers 77;Kaspars Daugaviņš 76;Miks Indrašis 75;Rihards Bukarts 75;Roberts Bukarts 74;Dans Ločmelis 74;Andris Džeriņš 73;Renārs Krastenbergs 72;Deniss Smirnovs 72;Mārtiņš Dzierkals 72"],
+["USA",2023,4,"Casey DeSmith 77;Cal Petersen 75","Lane Hutson 77;Nick Perbix 75;Dylan Samberg 75;Scott Perunovich 74;Henry Thrun 74;Ronnie Attard 73","Alex Tuch 82;Conor Garland 79;Cutter Gauthier 78;Matthew Coronato 76;Nick Bonino 76;Anders Bjork 75;Rocco Grimaldi 75;Sean Farrell 75;Drew O'Connor 75;Carter Mazur 73"],
+["CZE",2024,1,"Lukáš Dostál 83;Karel Vejmelka 81","Radko Gudas 81;Michal Kempný 77;Jan Rutta 77;David Špaček 76;Libor Hájek 76;Jakub Krejčík 75","David Pastrňák 93;Martin Nečas 87;Pavel Zacha 83;Roman Červenka 82;Ondřej Palát 81;Dominik Kubalík 81;David Kämpf 79;Lukáš Sedlák 78;Ondřej Kaše 78;Matěj Stránský 77"],
+["SUI",2024,2,"Leonardo Genoni 84;Akira Schmid 78","Roman Josi 90;Jonas Siegenthaler 80;Dean Kukan 76;Andrea Glauser 75;Michael Fora 75;Christian Marti 75","Nico Hischier 87;Kevin Fiala 86;Nino Niederreiter 81;Philipp Kurashev 79;Sven Andrighetto 78;Andres Ambühl 76;Christoph Bertschy 76;Calvin Thürkauf 76;Tristan Scherwey 75;Gaëtan Haas 75"],
+["SWE",2024,3,"Filip Gustavsson 81;Samuel Ersson 79","Victor Hedman 89;Erik Karlsson 88;Rasmus Dahlin 88;Jonas Brodin 82;Marcus Pettersson 79;Tim Heed 75","Lucas Raymond 85;Adrian Kempe 84;Joel Eriksson Ek 83;André Burakovsky 79;Fabian Zetterlund 79;Victor Olofsson 78;Marcus Johansson 78;Isac Lundeström 77;Carl Grundström 76;Pontus Holmberg 76"],
+["CAN",2024,4,"Jordan Binnington 81;Joel Hofer 78","Colton Parayko 81;Owen Power 81;Bowen Byram 78;Kaiden Guhle 78;Damon Severson 77;Jamie Oleksiak 77","Connor Bedard 86;John Tavares 84;Brandon Hagel 82;Jared McCann 80;Pierre-Luc Dubois 79;Dylan Cozens 79;Dylan Guenther 78;Michael Bunting 77;Andrew Mangiapane 77;Brandon Tanev 76"],
+["KAZ",2024,0,"Andrei Shutov 74;Nikita Boyarkin 72","Valeri Orekhov 71;Samat Daniyar 70;Leonid Metalnikov 70;Dmitriy Breus 70;Tamirlan Gaitamirov 69;Adil Beketayev 68","Nikita Mikhailis 76;Roman Starchenko 73;Kirill Savitski 72;Arkadiy Shestakov 71;Kirill Panyukov 71;Maxim Musorov 70;Batyrlan Muratov 70;Evgeni Rymarev 70;Dmitri Grents 70;Nikolay Shulga 69"],
+["USA",2025,1,"Jeremy Swayman 84;Joey Daccord 79","Zach Werenski 88;Jackson LaCombe 79;Brady Skjei 79;Alex Vlasic 78;Mason Lohrei 76;Zeev Buium 76","Clayton Keller 84;Tage Thompson 84;Cutter Gauthier 80;Logan Cooley 80;Matty Beniers 79;Shane Pinto 79;Conor Garland 79;Will Smith 79;Frank Nazar 76;Isaac Howard 75"],
+["SUI",2025,2,"Leonardo Genoni 84;Stéphane Charlin 76","Jonas Siegenthaler 80;J.J. Moser 79;Dean Kukan 75;Tim Berni 75;Andrea Glauser 75;Michael Fora 74","Nico Hischier 87;Kevin Fiala 86;Timo Meier 83;Nino Niederreiter 80;Denis Malgin 79;Sven Andrighetto 78;Christoph Bertschy 76;Damien Riat 76;Grégory Hofmann 75;Andres Ambühl 74"],
+["SWE",2025,3,"Jacob Markström 82;Samuel Ersson 79","Rasmus Andersson 82;Jonas Brodin 82;Adam Larsson 79;Rasmus Sandin 78;Erik Gustafsson 77;Simon Edvinsson 76","William Nylander 89;Lucas Raymond 85;Filip Forsberg 85;Mika Zibanejad 84;Elias Lindholm 82;William Karlsson 82;Leo Carlsson 81;Mikael Backlund 80;Alexander Wennberg 78;Marcus Johansson 77"],
+["CAN",2025,0,"Jordan Binnington 81;Marc-André Fleury 79","Noah Dobson 82;MacKenzie Weegar 81;Jared Spurgeon 80;Brandon Montour 80;Travis Sanheim 79;Mike Matheson 79","Nathan MacKinnon 94;Sidney Crosby 90;Macklin Celebrini 87;Travis Konecny 83;Bo Horvat 82;Ryan O'Reilly 80;Brayden Schenn 79;Adam Fantilli 79;Barrett Hayton 78;Tyson Foerster 77"]
+];
+const SQ=RAW.map(([c,y,m,g,d,f],i)=>{const pl=[];[['G',g],['D',d],['F',f]].forEach(([pos,s])=>s.split(';').forEach(t=>{t=t.trim();const j=t.lastIndexOf(' ');const n=t.slice(0,j);pl.push({n,sn:n.slice(n.indexOf(' ')+1),pos,r:+t.slice(j+1),sq:i})}));return{i,c,y,m,pl}});
+const SL=[['F',1,'ЛН'],['F',1,'ЦН'],['F',1,'ПН'],['D',1,'ЛЗ'],['D',1,'ПЗ'],['F',2,'ЛН'],['F',2,'ЦН'],['F',2,'ПН'],['D',2,'ЛЗ'],['D',2,'ПЗ'],['G',0,'ВРТ']].map(([t,l,a])=>({t,l,a}));
+const PN={F:'нападающий',D:'защитник',G:'вратарь'},PS={F:'нап.',D:'защ.',G:'вр.'};
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function rngOf(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19}h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);let a=(h^h>>>16)>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function flag(c){const w=b=>`<svg class="fl" viewBox="0 0 30 20" aria-hidden="true">${b}</svg>`,R=(y,h,f)=>`<rect y="${y}" width="30" height="${h}" fill="${f}"/>`;
+ switch(c){
+ case'RUS':return w(R(0,7,'#fff')+R(6.67,7,'#0039a6')+R(13.33,6.67,'#d52b1e'));
+ case'GER':return w(R(0,7,'#111')+R(6.67,7,'#dd0000')+R(13.33,6.67,'#ffce00'));
+ case'LAT':return w(R(0,20,'#9e3039')+R(8,4,'#fff'));
+ case'URS':return w(R(0,20,'#cc0000')+'<polygon points="5.5,2.3 6.2,4.2 8.2,4.2 6.6,5.4 7.2,7.3 5.5,6.1 3.8,7.3 4.4,5.4 2.8,4.2 4.8,4.2" fill="#ffd700"/>');
+ case'TCH':case'CZE':return w(R(0,10,'#fff')+R(10,10,'#d7141a')+'<polygon points="0,0 15,10 0,20" fill="#11457e"/>');
+ case'SVK':return w(R(0,7,'#fff')+R(6.67,7,'#0b4ea2')+R(13.33,6.67,'#ee1c25')+'<path d="M6.5 4.5h7v6.8c0 2.6-3.5 4-3.5 4s-3.5-1.4-3.5-4z" fill="#ee1c25" stroke="#fff" stroke-width=".8"/><path d="M10 6v7M8.3 7.8h3.4M8.8 10h2.4" stroke="#fff" stroke-width=".9"/>');
+ case'SWE':return w(R(0,20,'#006aa7')+'<rect x="9.4" width="3.8" height="20" fill="#fecc00"/>'+R(8,4,'#fecc00'));
+ case'FIN':return w(R(0,20,'#fff')+'<rect x="8.3" width="5" height="20" fill="#002f6c"/>'+R(7.3,5.4,'#002f6c'));
+ case'SUI':return w(R(0,20,'#da291c')+'<rect x="12.5" y="4" width="5" height="12" fill="#fff"/><rect x="9" y="7.5" width="12" height="5" fill="#fff"/>');
+ case'CAN':return w(R(0,20,'#fff')+'<rect width="7.5" height="20" fill="#d80621"/><rect x="22.5" width="7.5" height="20" fill="#d80621"/><polygon points="15,3.6 16.3,6.2 17.6,5.5 17.1,9.1 19,7.4 19.5,8.6 21.2,8.2 20.5,10.2 21.4,10.7 18.4,13.2 18.8,14.4 15.6,14 15.7,16.6 14.3,16.6 14.4,14 11.2,14.4 11.6,13.2 8.6,10.7 9.5,10.2 8.8,8.2 10.5,8.6 11,7.4 12.9,9.1 12.4,5.5 13.7,6.2" fill="#d80621"/>');
+ case'USA':{let s='';for(let i=0;i<13;i++)s+=R((i*20/13).toFixed(2),(20/13+.05).toFixed(2),i%2?'#fff':'#b22234');return w(s+'<rect width="12.5" height="10.8" fill="#3c3b6e"/>')}
+ case'KAZ':return w(R(0,20,'#00afca')+'<circle cx="15" cy="8.6" r="3.6" fill="#fec50c"/><path d="M10.5 14q4.5 2.8 9 0" stroke="#fec50c" stroke-width="1.2" fill="none"/>');
+ default:return w(R(0,20,'#d3202f')+'<circle cx="15" cy="10" r="5" fill="#fff"/>')}}
+const eff=(p,k)=>{const t=SL[k].t;if(t===p.pos)return p.r;if(t==='G'||p.pos==='G')return null;return p.r-(t==='F'?6:8)};
+const tier=r=>r>=90?'t90':r>=85?'t85':r>=80?'t80':'';
+function best(sq){const by=p=>sq.pl.filter(x=>x.pos===p).sort((a,b)=>b.r-a.r);const F=by('F'),D=by('D'),G=by('G');return[F[0],F[1],F[2],D[0],D[1],F[3],F[4],F[5],D[2],D[3],G[0]].map(p=>({p,r:p.r}))}
+function chem(L){let c=0;[[0,1,2,3,4],[5,6,7,8,9]].forEach(ks=>{const ps=ks.map(k=>L[k]).filter(Boolean).map(x=>x.p);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const a=SQ[ps[i].sq],b=SQ[ps[j].sq];if(a===b)c+=3;else if(a.c===b.c)c+=1}});return Math.min(100,Math.round(c/16*100))}
+function stats(L,cp,sty){
+ const av=ks=>{const v=ks.map(k=>L[k]).filter(Boolean).map(x=>x.r);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null};
+ const mix=ps=>{let s=0,w=0;ps.forEach(([v,q])=>{if(v!=null){s+=v*q;w+=q}});return w?s/w:null};
+ const F=mix([[av([0,1,2]),.58],[av([5,6,7]),.42]]),D=mix([[av([3,4]),.55],[av([8,9]),.45]]),G=L[10]?L[10].r:null;
+ const A=mix([[F,.8],[D,.2]]),Df=mix([[D,.4],[F,.2],[G,.4]]),b=cp/25,sa=[-2.5,0,2.5][sty];
+ const atk=A==null?null:A+b+sa,dfn=Df==null?null:Df+b-sa;
+ return{F,D,G,atk,dfn,ovr:atk==null?dfn:dfn==null?atk:(atk+dfn)/2,cp}}
+SQ.forEach(s=>{const L=best(s);s.team={name:TEAMS[s.c]+' '+s.y,c:s.c,...stats(L,45,1),tempo:1,ro:L.map((x,k)=>({...x,k}))}});
+
+let st=null,ui={mode:'C'};
+const showR=()=>!st||st.mode!=='A'||st.phase==='tour';
+const used=()=>new Set(st.L.filter(Boolean).map(x=>x.p.n));
+const freeFor=p=>SL.map((_,k)=>k).filter(k=>!st.L[k]&&eff(p,k)!=null);
+const filled=()=>st.L.filter(Boolean).length;
+const today=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
+const newCode=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=A[Math.floor(Math.random()*A.length)];return s};
+const slotName=k=>SL[k].t==='G'?'Вратарь':`${SL[k].l}-я пятёрка · ${PN[SL[k].t]}`;
+
+function start(seed){st={seed,mode:seed[0]==='A'?'A':'C',daily:seed[0]==='D',k:0,rr:seed[0]==='A'?1:3,drawn:[],L:Array(11).fill(null),style:1,phase:'draft',runs:0,cur:0,sel:null,pop:-1};draw();render();scrollTo({top:0,behavior:reduce?'auto':'smooth'})}
+function draw(){const u=used(),ok=s=>s.pl.some(p=>!u.has(p.n)&&freeFor(p).length);const r=rngOf(st.seed+'|'+filled()+'|'+st.k);const i0=Math.floor(r()*SQ.length);
+ for(let t=0;t<SQ.length;t++){const j=(i0+t)%SQ.length;if(!st.drawn.includes(j)&&ok(SQ[j])){st.cur=j;st.drawn.push(j);return}}st.cur=i0}
+
+function openSheet(t,b){$('#shT').textContent=t;$('#shB').innerHTML=b;$('#sheet').hidden=false;document.body.classList.add('lock');const f=$('#shB button');f&&f.focus()}
+function closeSheet(){$('#sheet').hidden=true;document.body.classList.remove('lock');st&&(st.sel=null)}
+function openPick(p){st.sel=p;const ks=freeFor(p).sort((a,b)=>(eff(p,b)-eff(p,a))||a-b);
+ openSheet(p.n+(showR()?' · '+p.r:''),`<p class="why">${PN[p.pos]}, ${esc(TEAMS[SQ[p.sq].c])} ${SQ[p.sq].y}. Куда поставить?</p><div class="opts">${ks.map(k=>{const off=SL[k].t!==p.pos;return`<button class="opt" data-act="place" data-k="${k}"><span>${slotName(k)} (${SL[k].a})${off?`<small>чужая позиция, штраф ${SL[k].t==='F'?'−6':'−8'}</small>`:''}</span><b>${showR()?eff(p,k):''}</b></button>`}).join('')}</div>`)}
+function place(k){const p=st.sel;if(!p||st.L[k]||eff(p,k)==null)return;st.L[k]={p,r:eff(p,k)};st.pop=k;closeSheet();st.k=0;if(filled()>=11)st.phase='ready';else draw();render()}
+function openMove(k){const x=st.L[k];st.sel={mv:k};const ks=SL.map((_,j)=>j).filter(j=>j!==k&&eff(x.p,j)!=null&&(!st.L[j]||eff(st.L[j].p,k)!=null));
+ openSheet(x.p.n,`<p class="why">Сейчас: ${slotName(k)}. Переставить или поменять местами:</p><div class="opts">${ks.map(j=>{const y=st.L[j];return`<button class="opt" data-act="move" data-k="${j}"><span>${slotName(j)} (${SL[j].a})${y?`<small style="color:var(--mut)">поменять с: ${esc(y.p.sn)}</small>`:'<small style="color:var(--mut)">свободно</small>'}</span><b>${showR()?eff(x.p,j):''}</b></button>`}).join('')}</div>`)}
+function doMove(j){const k=st.sel&&st.sel.mv;if(k==null)return;const x=st.L[k],y=st.L[j];st.L[j]={p:x.p,r:eff(x.p,j)};st.L[k]=y?{p:y.p,r:eff(y.p,k)}:null;st.pop=j;closeSheet();if(st.phase==='ready'&&filled()<11){st.phase='draft';st.k=0;draw()}render()}
+
+function pois(l,r){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=r()}while(p>L);return k-1}
+function pickPl(T,r,ex,ast){const c=T.ro.filter(x=>x.k<10&&!ex.includes(x));let tot=0;const w=c.map(x=>{const v=(SL[x.k].l===1?1.25:.85)*(SL[x.k].t==='F'?1:ast?.8:.3)*Math.pow(x.r/80,6);tot+=v;return v});let u=r()*tot;for(let i=0;i<c.length;i++){u-=w[i];if(u<=0)return c[i]}return c[c.length-1]}
+function play(A,B,r,po,ev){
+ const lam=(X,Y)=>Math.min(9,Math.max(.25,2.7*Math.exp((X.atk-Y.dfn)/15)*Math.sqrt(X.tempo*Y.tempo)));
+ const la=lam(A,B),lb=lam(B,A),E=[];let ga=pois(la,r),gb=pois(lb,r),x='';
+ const add=(side,min,so)=>{if(!ev)return;const T=side?B:A,s=pickPl(T,r,[],false),as=[];if(!so&&r()<.88){as.push(pickPl(T,r,[s],true));if(r()<.6)as.push(pickPl(T,r,[s,as[0]],true))}E.push({side,min,s,as,so})};
+ for(let i=0;i<ga;i++)add(0,.3+r()*59.6);for(let i=0;i<gb;i++)add(1,.3+r()*59.6);E.sort((a,b)=>a.min-b.min);
+ if(ga===gb){const pa=la/(la+lb);
+  if(po||r()<1-Math.exp(-(la+lb)/60*5*1.4)){x='ОТ';const w=r()<pa?0:1;w?gb++:ga++;add(w,60+r()*(po?15:4.9))}
+  else{x='Б';const w=r()<.5+(pa-.5)*.5?0:1;w?gb++:ga++;add(w,65,true)}}
+ return{a:A,b:B,ga,gb,x,E}}
+function table(G,R,n){const rows=G.map(t=>({t,gp:0,w:0,ow:0,ol:0,l:0,gf:0,ga:0,pts:0})),ix=new Map(G.map((t,i)=>[t,i]));
+ R.slice(0,n).flat().forEach(m=>{const A=rows[ix.get(m.a)],B=rows[ix.get(m.b)];A.gp++;B.gp++;A.gf+=m.ga;A.ga+=m.gb;B.gf+=m.gb;B.ga+=m.ga;const aw=m.ga>m.gb,W=aw?A:B,L=aw?B:A;if(m.x){W.ow++;L.ol++;W.pts+=2;L.pts+=1}else{W.w++;L.l++;W.pts+=3}});
+ return rows.sort((p,q)=>q.pts-p.pts||(q.gf-q.ga)-(p.gf-p.ga)||q.gf-p.gf)}
+function userTeam(){const cp=chem(st.L);return{name:'Ваша сборная',me:true,c:'',...stats(st.L,cp,st.style),tempo:[.88,1,1.12][st.style],ro:st.L.map((x,k)=>({...x,k}))}}
+function tourney(seed){const r=rngOf(seed),pool=SQ.map(s=>s.team);for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+ const me=userTeam(),GA=[me,...pool.slice(0,7)],GB=pool.slice(7,15),rr=[];let o=[1,2,3,4,5,6,7];
+ for(let t=0;t<7;t++){const l=[0,...o];rr.push([0,1,2,3].map(i=>[l[i],l[7-i]]));o=[o[6],...o.slice(0,6)]}
+ const sim=G=>rr.map(ps=>ps.map(([i,j])=>{let a=G[i],b=G[j];if(b.me)[a,b]=[b,a];return play(a,b,r,false,!!a.me)}));
+ const RA=sim(GA),RB=sim(GB),tA=table(GA,RA,7).map(x=>x.t),tB=table(GB,RB,7).map(x=>x.t);
+ const ko=([a,b])=>{if(b.me)[a,b]=[b,a];return play(a,b,r,true,!!a.me)},Wn=m=>m.ga>m.gb?m.a:m.b,Ls=m=>m.ga>m.gb?m.b:m.a;
+ const qf=[[tA[0],tB[3]],[tB[1],tA[2]],[tB[0],tA[3]],[tA[1],tB[2]]].map(ko),sf=[[Wn(qf[0]),Wn(qf[1])],[Wn(qf[2]),Wn(qf[3])]].map(ko),fin=ko([Wn(sf[0]),Wn(sf[1])]),br=ko([Ls(sf[0]),Ls(sf[1])]);
+ const G=RA.map((ms,t)=>({lab:'Группа A · тур '+(t+1),m:ms.find(m=>m.a.me),po:0}));let place=9;const q=qf.find(m=>m.a.me);
+ if(q){G.push({lab:'1/4 финала',m:q,po:1});place=5;if(Wn(q)===me){const s=sf.find(m=>m.a.me);G.push({lab:'1/2 финала',m:s,po:2});if(Wn(s)===me){G.push({lab:'Финал',m:fin,po:3});place=Wn(fin)===me?1:2}else{G.push({lab:'Матч за бронзу',m:br,po:3});place=Wn(br)===me?3:4}}}
+ return{me,GA,GB,RA,RB,qf,sf,fin,br,G,place,gpos:tA.indexOf(me)+1,Wn}}
+function runTour(){st.T=tourney(st.seed+'|T|'+st.runs);st.rev=1;st.phase='tour';
+ const T=st.T,w=T.G.filter(g=>g.m.ga>g.m.gb).length,rec={place:T.place,w,n:T.G.length},b=LS.get('dp_best');
+ if(!b||rec.place<b.place||(rec.place===b.place&&rec.w>b.w))LS.set('dp_best',rec);
+ if(T.place===1)LS.set('dp_gold',(LS.get('dp_gold')||0)+1);
+ if(st.daily&&st.runs===0&&!LS.get('dp_d'+st.seed))LS.set('dp_d'+st.seed,rec);
+ render();scrollTo({top:0,behavior:reduce?'auto':'smooth'})}
+
+const PLACE={1:['Чемпионы мира!','m1','1'],2:['Серебро','m2','2'],3:['Бронза','m3','3'],4:['4-е место','m4','4'],5:['Вылет в 1/4 финала','m4','¼'],9:['Не вышли из группы','m4','—']};
+const fmt=m=>{const s=Math.floor(m*60);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const nm=t=>t.me?'<b>Ваша сборная</b>':flag(t.c)+' '+esc(t.name);
+
+function renderStats(){const s=st?stats(st.L,chem(st.L),st.style):null,h=!showR(),v=x=>s&&x!=null?(h?'?':Math.round(x)):'—';
+ $('#stats').innerHTML=[['ОБЩ',v(s&&s.ovr)],['АТК',v(s&&s.atk)],['ЗАЩ',v(s&&s.dfn)],['ВРТ',v(s&&s.G)],['СЫГР',s&&filled()>1?s.cp+'%':'—']].map(([a,b])=>`<div class="st"><b>${b}</b><span>${a}</span></div>`).join('')}
+function slotHTML(k){const x=st&&st.L[k],s=SL[k];if(!x)return`<button class="slot empty" data-k="${k}" tabindex="-1" aria-label="${slotName(k)}: пусто"><span class="lab">${s.a}</span></button>`;
+ const off=x.p.pos!==s.t,sq=SQ[x.p.sq],cls=showR()?tier(x.r):'';return`<button class="slot ${cls}${off?' off':''}${st.pop===k?' pop':''}" data-act="slot" data-k="${k}" aria-label="${esc(x.p.n)}, ${slotName(k)}"><span class="rt">${showR()?x.r:'?'}</span><span class="sn">${esc(x.p.sn)}</span><span class="mt">${flag(sq.c)}’${String(sq.y).slice(2)}${off?' · '+s.a:''}</span></button>`}
+function renderRink(){const la=ks=>{if(!st||!showR())return'';const v=ks.map(k=>st.L[k]).filter(Boolean);return v.length===5?' · '+Math.round(v.reduce((a,x)=>a+x.r,0)/5):''};
+ $('#rink').innerHTML=`<div class="ln"><div class="lt">1-я пятёрка${la([0,1,2,3,4])}</div><div class="r3">${[0,1,2].map(slotHTML).join('')}</div><div class="r2">${[3,4].map(slotHTML).join('')}</div></div><div class="redl"><i></i></div><div class="ln"><div class="lt">2-я пятёрка${la([5,6,7,8,9])}</div><div class="r3">${[5,6,7].map(slotHTML).join('')}</div><div class="r2">${[8,9].map(slotHTML).join('')}</div></div><div class="bluel"></div><div class="gz"><div class="r1">${slotHTML(10)}</div></div>`;if(st)st.pop=-1}
+
+function pSetup(){const b=LS.get('dp_best'),g=LS.get('dp_gold')||0,d=LS.get('dp_dD'+today());
+ const modes=[['C','Классика','рейтинги видны · 3 переброса'],['A','Знаток','рейтинги скрыты до турнира · 1 переброс'],['D','Ежедневный вызов',d?'сегодня сыграно: '+PLACE[d.place][0].toLowerCase()+', побед '+d.w+' из '+d.n:'одинаковые сборные у всех — до полуночи']];
+ return`<h2 class="ph">Новый драфт</h2><p class="lead">В каждом раунде выпадает сборная с конкретного чемпионата мира — возьми из неё одного игрока. Одиннадцать раундов: две пятёрки и вратарь. Потом турнир: группа из восьми команд разных эпох и плей-офф.</p>
+ <div class="modes">${modes.map(([k,t,s])=>`<button class="mode" data-act="mode" data-m="${k}" aria-pressed="${ui.mode===k}"><b>${t}</b><span>${s}</span></button>`).join('')}</div>
+ <button class="btn big" data-act="start">Начать драфт</button>
+ <div class="codebox"><label for="codeIn">Играть по коду друга — те же сборные в тех же раундах</label><div class="row"><input id="codeIn" autocomplete="off" placeholder="например, C7KQ2X"><button class="btn sec" data-act="code">Играть</button></div><p id="codeErr" class="why"></p></div>
+ <ul class="rules"><li>Защитник в нападении теряет 6 пунктов рейтинга, нападающий в защите — 8. Вратарь только в воротах.</li><li>Сыгранность растёт, когда в одной пятёрке игроки одной страны, а сильнее всего — из одного состава.</li><li>Тап по игроку на площадке — переставить или поменять местами.</li></ul>
+ ${b?`<p class="why">Лучший результат: ${PLACE[b.place][0].toLowerCase()}, побед ${b.w} из ${b.n}${g?` · золотых медалей: ${g}`:''}.</p>`:''}`}
+function pDraft(){const s=SQ[st.cur],u=used(),h=showR();
+ const sec=(pos,t)=>{let ps=s.pl.filter(p=>p.pos===pos);ps=h?ps.sort((a,b)=>b.r-a.r):ps.sort((a,b)=>a.sn.localeCompare(b.sn));return`<div class="sec"><h3>${t}</h3>${ps.map(p=>{const i=s.pl.indexOf(p),dup=u.has(p.n),nf=!freeFor(p).length;return`<button class="pl ${h?tier(p.r):''}" data-act="pick" data-p="${i}" ${dup||nf?'disabled':''}><span class="chip">${h?p.r:'?'}</span><span class="nm">${esc(p.n)}</span><span class="ps">${dup?'уже в составе':nf?'нет места':PS[p.pos]}</span></button>`}).join('')}</div>`};
+ return`<div class="drhead"><span>Раунд <b>${filled()+1}</b> из 11</span><span>${st.daily?'Ежедневный вызов · ':st.mode==='A'?'Знаток · ':''}код ${esc(st.seed)}</span></div>
+ <div class="draw">${flag(s.c)}<div><h2>${TEAMS[s.c]}</h2><p>Чемпионат мира ${s.y}${s.m?` <span class="tag m${s.m}">${MED[s.m]}</span>`:''}</p></div><button class="btn sec" data-act="reroll" ${st.rr?'':'disabled'}>Перебросить · ${st.rr}</button></div>
+ ${sec('G','Вратари')}${sec('D','Защитники')}${sec('F','Нападающие')}`}
+function pReady(){const cp=chem(st.L),S=[['Оборона','меньше голов, крепче у своих ворот'],['Баланс','без перекосов'],['Атака','больше бросков и голов в обе стороны']];
+ return`<h2 class="ph">Состав собран</h2><p class="lead">Сыгранность ${cp}%. Выберите стиль игры и выходите на чемпионат мира: 7 матчей в группе, четыре лучших — в плей-офф.</p>
+ <div class="styles">${S.map(([t,d],i)=>`<button class="mode" data-act="style" data-s="${i}" aria-pressed="${st.style===i}"><b>${t}</b><span>${d}</span></button>`).join('')}</div>
+ <button class="btn big" data-act="go">Выйти на чемпионат мира</button><p class="why">Ещё можно переставить игроков — тап по карточке на площадке.</p>`}
+function gameHTML(g,i,open){const m=g.m,w=m.ga>m.gb;
+ const ev=m.E.map(e=>`<li class="${e.side?'op':'us'}"><span>${e.so?'Б':fmt(e.min)}</span><span>${e.side?esc(m.b.name)+': ':''}<b>${esc(e.s.p.sn)}</b>${e.as.length?' ('+e.as.map(a=>esc(a.p.sn)).join(', ')+')':''}${e.so?' — победный буллит':''}</span></li>`).join('');
+ return`<details class="game ${w?'W':'L'}" id="g${i}" ${open?'open':''}><summary><span class="gl">${g.lab}<b>${flag(m.b.c)}<span class="nm">${esc(m.b.name)}</span></b></span><span class="score">${m.ga}:${m.gb}${m.x?'<small> '+m.x+'</small>':''}</span></summary><ol class="evs">${ev}</ol></details>`}
+function tableHTML(G,R,n,t){const rows=table(G,R,n);return`<h3 class="tt">${t}${n<7?` · после ${n} тур.`:''}</h3><div class="scroll"><table><thead><tr><th>#</th><th>Команда</th><th>И</th><th>В</th><th>П</th><th>Ш</th><th>О</th></tr></thead><tbody>${rows.map((x,i)=>`<tr class="${x.t.me?'me':''}${i===3?' cut':''}"><td>${i+1}</td><td>${nm(x.t)}</td><td>${x.gp}</td><td>${x.w+x.ow}</td><td>${x.l+x.ol}</td><td>${x.gf}:${x.ga}</td><td><b>${x.pts}</b></td></tr>`).join('')}</tbody></table></div>`}
+function koHTML(m,showScore){const W=m.ga>m.gb;return`<div class="ko"><span class="${showScore&&W?'win':''}">${nm(m.a)}</span><b>${showScore?m.ga+':'+m.gb+(m.x?' '+m.x:''):'—'}</b><span class="${showScore&&!W?'win':''}">${nm(m.b)}</span></div>`}
+function pTour(){const T=st.T,n=T.G.length,rv=Math.min(st.rev,n),done=rv>=n,shown=T.G.slice(0,rv),stage=done?3:shown[shown.length-1].po;
+ const wins=shown.filter(g=>g.m.ga>g.m.gb).length,gf=shown.reduce((a,g)=>a+g.m.ga,0),ga=shown.reduce((a,g)=>a+g.m.gb,0);
+ let h='';
+ if(done){const [t,c,d]=PLACE[T.place],sc={};shown.forEach(g=>g.m.E.forEach(e=>{if(e.side||e.so)return;const a=sc[e.s.p.n]||(sc[e.s.p.n]={n:e.s.p.n,g:0,a:0});a.g++;e.as.forEach(x=>{const b=sc[x.p.n]||(sc[x.p.n]={n:x.p.n,g:0,a:0});b.a++})}));
+  const top=Object.values(sc).sort((a,b)=>(b.g+b.a)-(a.g+a.a)||b.g-a.g).slice(0,5);
+  h+=`<div class="res"><div class="disc ${c}">${d}</div><div><h2>${t}</h2><p>Побед ${wins} из ${n} · шайбы ${gf}:${ga}${T.place===9?` · ${T.gpos}-е место в группе`:''}</p>${wins===10?'<span class="badge">Идеальный турнир: 10 из 10</span>':''}</div></div>
+  <div class="acts"><button class="btn" data-act="copy">Скопировать результат</button><button class="btn sec" data-act="again">Переиграть турнир</button><button class="btn sec" data-act="new">Новый драфт</button></div>
+  ${st.daily&&st.runs>0?'<p class="why">Это повторный прогон — в зачёт ежедневного вызова идёт первый.</p>':''}
+  ${top.length?`<h3 class="tt">Бомбардиры команды</h3><div class="sc">${top.map(x=>`<span>${esc(x.n)}</span><span>${x.g}+${x.a}=${x.g+x.a}</span>`).join('')}</div>`:''}`}
+ else h+=`<div class="drhead"><span>Чемпионат мира · игра <b>${rv}</b></span><span>побед ${wins} · шайбы ${gf}:${ga}</span></div><div class="acts"><button class="btn" data-act="next">Следующий матч</button><button class="btn sec" data-act="all">Показать всё</button></div>`;
+ h+=`<h3 class="tt">Матчи</h3>`+shown.map((g,i)=>gameHTML(g,i,i===rv-1&&!done)).join('');
+ h+=tableHTML(T.GA,T.RA,Math.min(rv,7),'Группа A');
+ if(rv>=7||done){h+=`<details><summary class="ks" style="cursor:pointer">Группа B</summary>${tableHTML(T.GB,T.RB,7,'Группа B')}</details>`;
+  h+=`<h3 class="tt">Плей-офф</h3><p class="ks">1/4 финала</p>${T.qf.map(m=>koHTML(m,stage>=1)).join('')}`;
+  if(stage>=1)h+=`<p class="ks">1/2 финала</p>${T.sf.map(m=>koHTML(m,stage>=2)).join('')}`;
+  if(stage>=2)h+=`<p class="ks">Финал</p>${koHTML(T.fin,stage>=3)}<p class="ks">Матч за бронзу</p>${koHTML(T.br,stage>=3)}`}
+ return h}
+function render(){document.body.className='ph-'+(st?st.phase:'setup');renderStats();renderRink();
+ $('#panel').innerHTML=!st?pSetup():st.phase==='draft'?pDraft():st.phase==='ready'?pReady():pTour()}
+
+function shareText(){const T=st.T,w=T.G.filter(g=>g.m.ga>g.m.gb).length,gf=T.G.reduce((a,g)=>a+g.m.ga,0),ga=T.G.reduce((a,g)=>a+g.m.gb,0),L=st.L,s=k=>L[k].p.sn;
+ const pt=PLACE[T.place][0];return`Две пятёрки — ${pt}${pt.endsWith('!')?'':'.'} Побед ${w} из ${T.G.length}, шайбы ${gf}:${ga}.\n1-я: ${s(0)} – ${s(1)} – ${s(2)} / ${s(3)} – ${s(4)}\n2-я: ${s(5)} – ${s(6)} – ${s(7)} / ${s(8)} – ${s(9)}\nВратарь: ${s(10)}\nКод драфта: ${st.seed}`}
+function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,1800)}
+function copy(){const t=shareText(),fb=()=>{openSheet('Результат',`<textarea readonly id="shareTa">${esc(t)}</textarea><p class="why">Выделите текст и скопируйте.</p>`);const a=$('#shareTa');a.focus();a.select()};
+ try{navigator.clipboard.writeText(t).then(()=>toast('Скопировано'),fb)}catch(e){fb()}}
+
+document.addEventListener('click',e=>{if(e.target.id==='sheet'){closeSheet();return}const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
+ if(a==='mode'){ui.mode=b.dataset.m;render()}
+ else if(a==='start')start(ui.mode==='D'?'D'+today():ui.mode+newCode());
+ else if(a==='code'){const v=$('#codeIn').value.trim().toUpperCase().replace(/\s/g,'');if(/^[CAD][A-Z0-9]{4,12}$/.test(v))start(v);else $('#codeErr').textContent='Код начинается с C, A или D, например C7KQ2X.'}
+ else if(a==='reroll'){if(st.rr>0){st.rr--;st.k++;draw();render()}}
+ else if(a==='pick')openPick(SQ[st.cur].pl[+b.dataset.p]);
+ else if(a==='place')place(+b.dataset.k);
+ else if(a==='slot'){const k=+b.dataset.k;if(st&&(st.phase==='draft'||st.phase==='ready')&&st.L[k])openMove(k)}
+ else if(a==='move')doMove(+b.dataset.k);
+ else if(a==='close')closeSheet();
+ else if(a==='style'){st.style=+b.dataset.s;render()}
+ else if(a==='go')runTour();
+ else if(a==='next'){st.rev++;render();const g=document.getElementById('g'+(Math.min(st.rev,st.T.G.length)-1));g&&g.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'})}
+ else if(a==='all'){st.rev=st.T.G.length;render()}
+ else if(a==='again'){st.runs++;runTour()}
+ else if(a==='new'){st=null;ui.mode='C';render();scrollTo({top:0})}
+ else if(a==='copy')copy()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet();if(e.key==='Enter'&&e.target.id==='codeIn')document.querySelector('[data-act=code]').click()});
+const np=new Set(SQ.flatMap(s=>s.pl.map(p=>p.n))).size,ys=SQ.map(s=>s.y);
+$('#dbline').textContent=`${new Set(SQ.map(s=>s.c)).size} сборных · ${SQ.length} составов · ${np} игроков · ${Math.min(...ys)}–${Math.max(...ys)}`;
+render();
+}
+</script>
+</body>
+</html>
