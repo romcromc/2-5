@@ -189,7 +189,7 @@ tr.cut td{border-bottom:2px solid var(--red)}
 {
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const TEAMS={URS:'СССР',TCH:'Чехословакия',CAN:'Канада',SWE:'Швеция',FIN:'Финляндия',CZE:'Чехия',SVK:'Словакия',RUS:'Россия',USA:'США',SUI:'Швейцария',GER:'Германия',LAT:'Латвия',KAZ:'Казахстан'};
+const TEAMS={URS:'СССР',TCH:'Чехословакия',CAN:'Канада',SWE:'Швеция',FIN:'Финляндия',CZE:'Чехия',SVK:'Словакия',RUS:'Россия',USA:'США',SUI:'Швейцария',GER:'Германия',LAT:'Латвия',KAZ:'Казахстан',NOR:'Норвегия',BLR:'Беларусь',FRA:'Франция',AUT:'Австрия',ITA:'Италия'};
 const MED=['','Золото','Серебро','Бронза','4-е место'];
 const RAW=[
 ["URS",1979,1,"Vladislav Tretiak 96;Vladimir Myshkin 84","Vyacheslav Fetisov 90;Valeri Vasiliev 89;Zinetula Bilyaletdinov 85;Gennady Tsygankov 84;Vladimir Lutchenko 84;Vasili Pervukhin 83;Sergei Babinov 82","Valeri Kharlamov 95;Boris Mikhailov 93;Vladimir Petrov 93;Sergei Makarov 89;Helmut Balderis 88;Alexander Yakushev 87;Sergei Kapustin 86;Alexander Golikov 85;Vladimir Golikov 84;Viktor Zhluktov 84;Alexander Skvortsov 83"],
@@ -209,6 +209,11 @@ const RAW=[
 ["FIN",1994,2,"Jarmo Myllys 87;Jukka Tammi 83","Teppo Numminen 88;Jyrki Lumme 86;Timo Jutila 84;Erik Hämäläinen 82;Mika Strömberg 81;Mika Nieminen 81","Saku Koivu 90;Jari Kurri 91;Mikko Mäkelä 87;Raimo Helminen 85;Esa Tikkanen 87;Janne Ojanen 83;Jarkko Varvio 81;Antti Törmänen 81"],
 ["FIN",1999,2,"Miikka Kiprusoff 87;Ari Sulander 83","Teppo Numminen 89;Petteri Nummelin 84;Janne Niinimaa 85;Sami Salo 82;Mika Strömberg 82;Erik Hämäläinen 81","Saku Koivu 92;Teemu Selänne 93;Ville Peltonen 88;Olli Jokinen 86;Jere Lehtinen 88;Raimo Helminen 85;Toni Sihvonen 83;Antti Törmänen 82"],
 ["ITA",2021,0,"Justin Fazio 80;Andreas Bernard 76","Enrico Miglioranzi 78;Stefano Marchetti 77;Alex Trivellato 77;Gregorio Gios 75;Phil Pietroniro 75;Daniel Glira 74","Alex Petan 82;Angelo Miceli 80;Stefano Giliati 79;Luca Frigo 78;Anthony Bardaro 78;Raphael Andergassen 77;Ivan Deluca 77;Thomas Galimberti 76;Daniel Frank 76"],
+["NOR",2017,0,"Lars Haugen 78;Henrik Haukeland 74","Jonas Holøs 82;Ole-Kristian Tollefsen 80;Johannes Johannesen 76;Mats Trygg 78;Tommy Jakobsen 77;Anders Myrvold 76","Patrick Thoresen 85;Anders Bastiansen 80;Kristian Forsberg 79;Andreas Martinsen 79;Martin Røymark 77;Niklas Roest 76;Ken Andre Olimb 76;Sondre Olden 75"],
+["BLR",2014,0,"Andrei Mezin 82;Vitali Koval 78","Dmitri Korobov 80;Alexander Kitarov 78;Vladimir Denisov 77;Andrei Stas 76;Oleg Yevenko 76;Pavel Chernook 75","Mikhail Grabovski 88;Andrei Kostitsyn 85;Sergei Kostitsyn 83;Alexei Kalyuzhny 82;Konstantin Koltsov 81;Yevgeni Kovyrshin 77;Nikita Osipov 77"],
+["FRA",2017,0,"Sebastian Ylönen 77;Julian Junca 76","Yohann Auvitu 83;Kevin Hecquefeuille 78;Antonin Manavian 76;Florian Chakiachvili 76;Jonathan Janil 74;Guillaume Leclerc 74","Stephane Da Costa 87;Antoine Roussel 85;Pierre-Edouard Bellemare 84;Damien Fleury 81;Anthony Rech 80;Laurent Meunier 78;Teddy Da Costa 77;Valentin Claireaux 76"],
+["AUT",2013,0,"Bernhard Starkbaum 78;Bernd Brückler 76","Thomas Pöck 83;Robert Lukas 80;Florian Iberer 78;Patrick Harand 76;Constantin Schwaiger 75;Mario Altmann 75","Thomas Vanek 89;Michael Raffl 83;Oliver Setzinger 81;Andreas Nödl 80;Thomas Hundertpfund 78;Thomas Raffl 78;Gregor Baumgartner 77;Dieter Kalt 76"],
+["SUI",2013,2,"Reto Berra 85;Leonardo Genoni 84","Roman Josi 92;Raphael Diaz 83;Philippe Furrer 82;Patrick von Gunten 80;Eric Blum 80;Robin Grossmann 78","Nino Niederreiter 90;Damien Brunner 87;Denis Hollenstein 86;Andres Ambühl 82;Simon Moser 83;Thibaut Monnet 81;Julian Walker 79;Ryan Gardner 78"],
 ["CAN",1989,2,"Grant Fuhr 88;Sean Burke 82","Scott Stevens 87;Dave Ellett 82;James Patrick 82;Randy Carlyle 81;Dave Babych 80;Ken Daneyko 78","Steve Yzerman 92;Mark Messier 91;Dale Hawerchuk 88;Glenn Anderson 86;Brian Bellows 85;Kirk Muller 84;John MacLean 83;Kevin Dineen 82;Ray Ferraro 81;Pat Verbeek 81;Gerard Gallant 80"],
 ["SWE",1989,4,"Peter Lindmark 83;Rolf Ridderwall 80","Börje Salming 86;Anders Eldebrink 83;Fredrik Olausson 82;Tommy Albelin 80;Thomas Eriksson 80;Tommy Samuelsson 79","Kent Nilsson 87;Tomas Sandström 85;Thomas Steen 83;Ulf Dahlén 82;Thomas Rundqvist 82;Håkan Södergren 80;Bo Berglund 80;Jonas Bergqvist 80;Anders Carlsson 79;Peter Eriksson 78"],
 ["FIN",1995,1,"Jarmo Myllys 86;Ari Sulander 80","Timo Jutila 84;Janne Niinimaa 83;Mika Strömberg 80;Marko Kiprusoff 80;Hannu Virta 80;Petteri Nummelin 79","Saku Koivu 89;Jere Lehtinen 86;Ville Peltonen 85;Sami Kapanen 83;Raimo Helminen 82;Esa Keskinen 82;Mika Nieminen 81;Janne Ojanen 81;Raimo Summanen 80;Juha Ylönen 79"],
@@ -291,6 +296,7 @@ const POSOV={
 "Mikhail Varnakov":"LW","Alexander Kozhevnikov":"LW",
 "Mats Sundin":"C","Peter Forsberg":"C","Håkan Loob":"RW","Tomas Sandström":"RW","Jari Kurri":"RW",
 "Vladimír Růžička":"C","Dušan Pašek":"C","Milan Nový":"LW","Ivan Hlinka":"C",
+"Thomas Vanek":"LW","Nino Niederreiter":"RW","Mikhail Grabovski":"C","Stephane Da Costa":"C","Patrick Thoresen":"C",
 "Vyacheslav Fetisov":"LD","Alexei Kasatonov":"RD","Vladimir Konstantinov":"RD","Alexei Gusarov":"LD","Zdeno Chára":"LD","Victor Hedman":"LD","Rasmus Dahlin":"LD",
 "Moritz Seider":"RD","Roman Josi":"LD","Mike Green":"RD","Duncan Keith":"LD","Brent Burns":"RD",
 "Niklas Kronwall":"LD","Oliver Ekman-Larsson":"LD","John Klingberg":"RD","Tomáš Kaberle":"LD",
@@ -325,6 +331,11 @@ function flag(c){const w=b=>`<svg class="fl" viewBox="0 0 30 20" aria-hidden="tr
  case'CAN':return w(R(0,20,'#fff')+'<rect width="7.5" height="20" fill="#d80621"/><rect x="22.5" width="7.5" height="20" fill="#d80621"/><polygon points="15,3.6 16.3,6.2 17.6,5.5 17.1,9.1 19,7.4 19.5,8.6 21.2,8.2 20.5,10.2 21.4,10.7 18.4,13.2 18.8,14.4 15.6,14 15.7,16.6 14.3,16.6 14.4,14 11.2,14.4 11.6,13.2 8.6,10.7 9.5,10.2 8.8,8.2 10.5,8.6 11,7.4 12.9,9.1 12.4,5.5 13.7,6.2" fill="#d80621"/>');
  case'USA':{let s='';for(let i=0;i<13;i++)s+=R((i*20/13).toFixed(2),(20/13+.05).toFixed(2),i%2?'#fff':'#b22234');return w(s+'<rect width="12.5" height="10.8" fill="#3c3b6e"/>')}
  case'KAZ':return w(R(0,20,'#00afca')+'<circle cx="15" cy="8.6" r="3.6" fill="#fec50c"/><path d="M10.5 14q4.5 2.8 9 0" stroke="#fec50c" stroke-width="1.2" fill="none"/>');
+ case'NOR':return w(R(0,20,'#ef2b2d')+'<rect x="8.3" width="5" height="20" fill="#fff"/>'+R(7.3,2,'#fff')+'<rect x="9.4" width="2.8" height="20" fill="#002868"/>'+R(8.1,2.6,'#002868'));
+ case'BLR':return w(R(0,13.33,'#d22730')+R(13.33,6.67,'#007a3d')+'<rect width="4" height="20" fill="#fff"/><rect width="4" height="20" fill="#d22730" opacity=".0"/>');
+ case'FRA':return w('<rect width="10" height="20" fill="#0055a4"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ef4135"/>');
+ case'AUT':return w(R(0,6.67,'#ed2939')+R(6.67,6.67,'#fff')+R(13.33,6.67,'#ed2939'));
+ case'ITA':return w('<rect width="10" height="20" fill="#009246"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ce2b37"/>');
  default:return w(R(0,20,'#d3202f')+'<circle cx="15" cy="10" r="5" fill="#fff"/>')}}
 const eff=(p,k)=>p.sp===SL[k].t?p.r:null;
 const tier=r=>r>=90?'t90':r>=85?'t85':r>=80?'t80':'';
