@@ -315,7 +315,9 @@ const tier=r=>r>=90?'t90':r>=85?'t85':r>=80?'t80':'';
 function best(sq){const by=sp=>sq.pl.filter(p=>p.sp===sp).sort((a,b)=>b.r-a.r);
  const LW=by('LW'),C=by('C'),RW=by('RW'),LD=by('LD'),RD=by('RD'),G=by('G');
  return[LW[0],C[0],RW[0],LD[0],RD[0],LW[1],C[1],RW[1],LD[1],RD[1],G[0]].map(p=>p?{p,r:p.r}:null)}
-function chem(L){let c=0;[[0,1,2,3,4],[5,6,7,8,9]].forEach(ks=>{const ps=ks.map(k=>L[k]).filter(Boolean).map(x=>x.p);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const a=SQ[ps[i].sq],b=SQ[ps[j].sq];if(a===b)c+=3;else if(a.c===b.c)c+=1}});return Math.min(100,Math.round(c/16*100))}
+const CGRP={URS:'RUS'};
+const cgrp=c=>CGRP[c]||c;
+function chem(L){let c=0;[[0,1,2,3,4],[5,6,7,8,9]].forEach(ks=>{const ps=ks.map(k=>L[k]).filter(Boolean).map(x=>x.p);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const a=SQ[ps[i].sq],b=SQ[ps[j].sq];if(a===b)c+=3;else if(cgrp(a.c)===cgrp(b.c))c+=1}});return Math.min(100,Math.round(c/16*100))}
 function stats(L,cp,sty){
  const av=ks=>{const v=ks.map(k=>L[k]).filter(Boolean).map(x=>x.r);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null};
  const mix=ps=>{let s=0,w=0;ps.forEach(([v,q])=>{if(v!=null){s+=v*q;w+=q}});return w?s/w:null};
