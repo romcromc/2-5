@@ -355,10 +355,10 @@ function stats(L,cp,sty){
  const av=ks=>{const v=ks.map(k=>L[k]).filter(Boolean).map(x=>x.r);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null};
  const mix=ps=>{let s=0,w=0;ps.forEach(([v,q])=>{if(v!=null){s+=v*q;w+=q}});return w?s/w:null};
  const F=mix([[av([0,1,2]),.58],[av([5,6,7]),.42]]),D=mix([[av([3,4]),.55],[av([8,9]),.45]]),G=L[10]?L[10].r:null;
- const A=mix([[F,.8],[D,.2]]),Df=mix([[D,.4],[F,.2],[G,.4]]),b=cp/8,sa=[-2.5,0,2.5][sty];
+ const A=mix([[F,.8],[D,.2]]),Df=mix([[D,.4],[F,.2],[G,.4]]),b=cp/5.3,sa=[-2.5,0,2.5][sty];
  const atk=A==null?null:A+b+sa,dfn=Df==null?null:Df+b-sa;
  return{F,D,G,atk,dfn,ovr:atk==null?dfn:dfn==null?atk:(atk+dfn)/2,cp}}
-SQ.forEach(s=>{const L=best(s);s.team={name:TEAMS[s.c]+' '+s.y,c:s.c,...stats(L,25,1),tempo:1,ro:L.map((x,k)=>({...x,k}))}});
+SQ.forEach(s=>{const L=best(s);s.team={name:TEAMS[s.c]+' '+s.y,c:s.c,...stats(L,22,1),tempo:1,ro:L.map((x,k)=>({...x,k}))}});
 
 let st=null,ui={mode:'C'};
 const showR=()=>!st||st.mode!=='A'||st.phase==='tour';
