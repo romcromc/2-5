@@ -342,9 +342,11 @@ const tier=r=>r>=90?'t90':r>=85?'t85':r>=80?'t80':'';
 function best(sq){const by=sp=>sq.pl.filter(p=>p.sp===sp).sort((a,b)=>b.r-a.r);
  const LW=by('LW'),C=by('C'),RW=by('RW'),LD=by('LD'),RD=by('RD'),G=by('G');
  return[LW[0],C[0],RW[0],LD[0],RD[0],LW[1],C[1],RW[1],LD[1],RD[1],G[0]].map(p=>p?{p,r:p.r}:null)}
-const CGRP={URS:'RUS'};
+const CGRP={URS:'RUS',TCH:'CZS',CZE:'CZS',SVK:'CZS'};
 const cgrp=c=>CGRP[c]||c;
-function chem(L){let c=0;[[0,1,2,3,4],[5,6,7,8,9]].forEach(ks=>{const ps=ks.map(k=>L[k]).filter(Boolean).map(x=>x.p);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const a=SQ[ps[i].sq],b=SQ[ps[j].sq];if(a===b)c+=3;else if(cgrp(a.c)===cgrp(b.c))c+=1}});return Math.min(100,Math.round(c/16*100))}
+const pairBonus=(p1,p2)=>{const a=SQ[p1.sq],b=SQ[p2.sq];return a===b?3:cgrp(a.c)===cgrp(b.c)?1:0};
+function chem(L){let c=0;[[0,1,2,3,4],[5,6,7,8,9]].forEach(ks=>{const ps=ks.map(k=>L[k]).filter(Boolean).map(x=>x.p);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++)c+=pairBonus(ps[i],ps[j])});return Math.min(100,Math.round(c/16*100))}
+function chemPairs(L){const out=[];[[0,1,2,3,4],[5,6,7,8,9]].forEach(ks=>{const idx=ks.filter(k=>L[k]);for(let i=0;i<idx.length;i++)for(let j=i+1;j<idx.length;j++){const b=pairBonus(L[idx[i]].p,L[idx[j]].p);if(b>0)out.push({a:idx[i],b:idx[j],bonus:b})}});return out}
 function stats(L,cp,sty){
  const av=ks=>{const v=ks.map(k=>L[k]).filter(Boolean).map(x=>x.r);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null};
  const mix=ps=>{let s=0,w=0;ps.forEach(([v,q])=>{if(v!=null){s+=v*q;w+=q}});return w?s/w:null};
@@ -421,11 +423,12 @@ function runTour(){stopLive();st.T=tourney(st.seed+'|T|'+st.runs);st.rev=0;st.ph
  if(T.place===1)LS.set('dp_gold',(LS.get('dp_gold')||0)+1);
  if(st.daily&&st.runs===0&&!LS.get('dp_d'+st.seed))LS.set('dp_d'+st.seed,rec);
  scrollTo({top:0});render()}
-let LV=null,LT=null;
+let LV=null,LT=null,SPD=1;
 function stopLive(){clearInterval(LT);LT=null;LV=null}
-function startLive(){if(!st||st.phase!=='tour'||st.rev>=st.T.G.length)return;clearInterval(LT);LV={i:st.rev,g:st.T.G[st.rev],t0:performance.now(),last:''};render();updLive(0);LT=setInterval(tickLive,100)}
-function tickLive(){if(!LV)return;const f=Math.min(1,(performance.now()-LV.t0)/10000);updLive(f);if(f>=1)endLive()}
+function startLive(){if(!st||st.phase!=='tour'||st.rev>=st.T.G.length)return;clearInterval(LT);LV={i:st.rev,g:st.T.G[st.rev],t0:performance.now(),acc:0,last:''};render();updLive(0);LT=setInterval(tickLive,100)}
+function tickLive(){if(!LV)return;const f=Math.min(1,(LV.acc+(performance.now()-LV.t0)*SPD)/10000);updLive(f);if(f>=1)endLive()}
 function endLive(){clearInterval(LT);LT=null;LV=null;st.rev++;render()}
+function toggleSpd(){if(LV){LV.acc+=(performance.now()-LV.t0)*SPD;LV.t0=performance.now()}SPD=SPD===1?2:SPD===2?4:1;render()}
 const scoreAt=(m,gt)=>{let a=0,b=0;m.E.forEach(e=>{if(e.k==='g'&&e.t<=gt)e.s?b++:a++});return[a,b]};
 function updLive(f){const g=LV.g,m=g.m,gt=f*m.dur,s=scoreAt(m,gt),soT=60+m.ot;
  $('#lvS').textContent=s[0]+':'+s[1];
@@ -447,7 +450,17 @@ function slotHTML(k){const x=st&&st.L[k],s=SL[k];
  const sq=SQ[x.p.sq],cls=showR()?tier(x.r):'';return`<button class="slot ${cls}${st.pop===k?' pop':''}" data-act="slot" data-k="${k}" aria-label="${esc(x.p.n)}, ${slotName(k)}"><span class="rt">${showR()?x.r:'?'}</span><span class="sn">${esc(x.p.sn)}</span><span class="mt">${flag(sq.c)}’${String(sq.y).slice(2)}</span></button>`}
 function renderSel(){const n=$('#selnote');if(!n)return;if(st&&st.phase==='draft'&&st.pick){n.hidden=false;n.innerHTML=`Выбран <b>${esc(st.pick.sn)}</b> — нажмите на подсвеченную позицию на площадке. <button class="btn sec" data-act="cancelSel" style="margin-left:8px;min-height:30px;padding:4px 10px">Отмена</button>`}else n.hidden=true}
 function renderRink(){const la=ks=>{if(!st||!showR())return'';const v=ks.map(k=>st.L[k]).filter(Boolean);return v.length===5?' · '+Math.round(v.reduce((a,x)=>a+x.r,0)/5):''};
- $('#rink').innerHTML=`<div class="ln"><div class="lt">1-я пятёрка${la([0,1,2,3,4])}</div><div class="r3">${[0,1,2].map(slotHTML).join('')}</div><div class="r2">${[3,4].map(slotHTML).join('')}</div></div><div class="redl"><i></i></div><div class="ln"><div class="lt">2-я пятёрка${la([5,6,7,8,9])}</div><div class="r3">${[5,6,7].map(slotHTML).join('')}</div><div class="r2">${[8,9].map(slotHTML).join('')}</div></div><div class="bluel"></div><div class="gz"><div class="r1">${slotHTML(10)}</div></div>`;if(st)st.pop=-1}
+ $('#rink').innerHTML=`<div class="ln"><div class="lt">1-я пятёрка${la([0,1,2,3,4])}</div><div class="r3">${[0,1,2].map(slotHTML).join('')}</div><div class="r2">${[3,4].map(slotHTML).join('')}</div></div><div class="redl"><i></i></div><div class="ln"><div class="lt">2-я пятёрка${la([5,6,7,8,9])}</div><div class="r3">${[5,6,7].map(slotHTML).join('')}</div><div class="r2">${[8,9].map(slotHTML).join('')}</div></div><div class="bluel"></div><div class="gz"><div class="r1">${slotHTML(10)}</div></div>`;if(st)st.pop=-1;drawChem()}
+function drawChem(){const rink=$('#rink');if(!rink||!st||filled()<2)return;
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('aria-hidden','true');
+ svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible';
+ rink.style.position='relative';rink.prepend(svg);
+ const rb=rink.getBoundingClientRect();
+ const center=k=>{const el=rink.querySelector(`[data-k="${k}"]`);if(!el||el.classList.contains('empty'))return null;const r=el.getBoundingClientRect();return[r.left+r.width/2-rb.left,r.top+r.height/2-rb.top]};
+ chemPairs(st.L).forEach(({a,b,bonus})=>{const pa=center(a),pb=center(b);if(!pa||!pb)return;
+  const col=bonus===3?'#2ecc71':'#e0c43e';
+  svg.insertAdjacentHTML('beforeend',`<line x1="${pa[0].toFixed(1)}" y1="${pa[1].toFixed(1)}" x2="${pb[0].toFixed(1)}" y2="${pb[1].toFixed(1)}" stroke="${col}" stroke-width="${bonus===3?3:1.6}" stroke-linecap="round" opacity="${bonus===3?.85:.55}"/>`)})}
+addEventListener('resize',()=>{clearTimeout(drawChem.t);drawChem.t=setTimeout(()=>{if(st)drawChem()},150)});
 
 function pSetup(){const b=LS.get('dp_best'),g=LS.get('dp_gold')||0,d=LS.get('dp_dD'+today());
  const modes=[['C','Классика','рейтинги видны · 3 переброса'],['A','Знаток','рейтинги скрыты до турнира · 1 переброс'],['D','Ежедневный вызов',d?'сегодня сыграно: '+PLACE[d.place][0].toLowerCase()+', побед '+d.w+' из '+d.n:'одинаковые сборные у всех — до полуночи']];
@@ -455,7 +468,7 @@ function pSetup(){const b=LS.get('dp_best'),g=LS.get('dp_gold')||0,d=LS.get('dp_
  <div class="modes">${modes.map(([k,t,s])=>`<button class="mode" data-act="mode" data-m="${k}" aria-pressed="${ui.mode===k}"><b>${t}</b><span>${s}</span></button>`).join('')}</div>
  <button class="btn big" data-act="start">Начать драфт</button>
  <div class="codebox"><label for="codeIn">Играть по коду друга — те же сборные в тех же раундах</label><div class="row"><input id="codeIn" autocomplete="off" placeholder="например, C7KQ2X"><button class="btn sec" data-act="code">Играть</button></div><p id="codeErr" class="why"></p></div>
- <ul class="rules"><li>У каждого игрока своя фиксированная позиция — левый край, центр, правый край или левый/правый защитник. Поставить его можно только туда, выбор игрока сразу подсветит нужное место на площадке.</li><li>Сыгранность растёт, когда в одной пятёрке игроки одной страны, а сильнее всего — из одного состава.</li><li>Тап по игроку на площадке — переставить или поменять местами.</li></ul>
+ <ul class="rules"><li>У каждого игрока своя фиксированная позиция — левый край, центр, правый край или левый/правый защитник. Поставить его можно только туда, выбор игрока сразу подсветит нужное место на площадке.</li><li>Сыгранность растёт, когда в одной пятёрке игроки одной страны (Чехословакия, Чехия и Словакия считаются одной страной), а сильнее всего — из одного состава. Связи между игроками показаны линиями на площадке: <b style="color:#2ecc71">зелёная</b> — один состав, <b style="color:#e0c43e">жёлтая</b> — одна страна.</li><li>Тап по игроку на площадке — переставить или поменять местами.</li></ul>
  ${b?`<p class="why">Лучший результат: ${PLACE[b.place][0].toLowerCase()}, побед ${b.w} из ${b.n}${g?` · золотых медалей: ${g}`:''}.</p>`:''}`}
 function pDraft(){const s=SQ[st.cur],u=used(),h=showR();
  const sec=(pos,t)=>{let ps=s.pl.filter(p=>p.pos===pos);ps=h?ps.sort((a,b)=>b.r-a.r):ps.sort((a,b)=>a.sn.localeCompare(b.sn));return`<div class="sec"><h3>${t}</h3>${ps.map(p=>{const i=s.pl.indexOf(p),dup=u.has(p.n),nf=!freeFor(p).length,sel=st.pick===p;return`<button class="pl ${h?tier(p.r):''}${sel?' sel':''}" data-act="pick" data-p="${i}" ${dup||nf?'disabled':''}><span class="chip">${h?p.r:'?'}</span><span class="nm">${esc(p.n)}</span><span class="ps">${dup?'уже в составе':nf?'нет места':SPS[p.sp]}</span></button>`}).join('')}</div>`};
@@ -494,7 +507,7 @@ function pTour(){const T=st.T,n=T.G.length,rv=Math.min(st.rev,n),done=rv>=n&&!LV
   <div class="acts"><button class="btn" data-act="copy">Скопировать результат</button><button class="btn sec" data-act="again">Переиграть турнир</button><button class="btn sec" data-act="new">Новый драфт</button></div>
   ${st.daily&&st.runs>0?'<p class="why">Это повторный прогон — в зачёт ежедневного вызова идёт первый.</p>':''}
   ${top.length?`<h3 class="tt">Бомбардиры команды</h3><div class="sc">${top.map(x=>`<span>${esc(x.n)}</span><span>${x.g}+${x.a}=${x.g+x.a}</span>`).join('')}</div>`:''}`}
- else h+=`<div class="drhead"><span>Чемпионат мира · ${LV?`игра <b>${LV.i+1}</b>`:`сыграно <b>${rv}</b>`}</span><span>побед ${wins} · шайбы ${gf}:${ga}</span></div>${LV?liveHTML(LV.g):''}<div class="acts">${LV?'<button class="btn" data-act="skip">Пропустить матч</button>':'<button class="btn" data-act="next">Следующий матч</button>'}<button class="btn sec" data-act="all">Показать всё</button></div>`;
+ else h+=`<div class="drhead"><span>Чемпионат мира · ${LV?`игра <b>${LV.i+1}</b>`:`сыграно <b>${rv}</b>`}</span><span>побед ${wins} · шайбы ${gf}:${ga}</span></div>${LV?liveHTML(LV.g):''}<div class="acts">${LV?`<button class="btn" data-act="skip">Пропустить матч</button><button class="btn sec" data-act="spd">×${SPD}</button>`:'<button class="btn" data-act="next">Следующий матч</button>'}<button class="btn sec" data-act="all">Показать всё</button></div>`;
  h+=shown.length?`<h3 class="tt">Матчи</h3>`+shown.map((g,i)=>gameHTML(g,i,i===rv-1&&!done&&!LV)).join(''):'';
  h+=tableHTML(T.GA,T.RA,Math.min(rv,7),'Группа A');
  if(rv>=7||done){h+=`<details><summary class="ks" style="cursor:pointer">Группа B</summary>${tableHTML(T.GB,T.RB,7,'Группа B')}</details>`;
@@ -526,6 +539,7 @@ document.addEventListener('click',e=>{if(e.target.id==='sheet'){closeSheet();ret
  else if(a==='go')runTour();
  else if(a==='next')startLive();
  else if(a==='skip'){if(LV){updLive(1);endLive()}}
+ else if(a==='spd')toggleSpd();
  else if(a==='all'){stopLive();st.rev=st.T.G.length;render()}
  else if(a==='again'){st.runs++;runTour()}
  else if(a==='new'){stopLive();st=null;ui.mode='C';render();scrollTo({top:0})}
